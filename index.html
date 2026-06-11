@@ -72,7 +72,7 @@
         .num-impresso { background: #f1f5f9; padding: 14px 5px; text-align: center; border: 1px solid #cbd5e1; font-weight: bold; border-radius: 8px; }
         .num-impresso.marcado { background: var(--success); color: white; }
 
-        /* Estilizações das listas de prêmios e tabelas de agendados */
+        /* Listas e tabelas */
         .premio-item { padding: 10px 14px; background: #fdf2f8; border-left: 4px solid #ec4899; border-radius: 6px; margin-bottom: 6px; font-weight: 500; font-size: 0.95rem; }
         .sorteio-ativo-banner { background: #e0e7ff; border: 2px solid #c7d2fe; color: #3730a3; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; text-align: center; }
         
@@ -230,7 +230,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc, updateDoc, query, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -269,7 +269,6 @@
         document.getElementById('fecharModal').onclick = () => modal.style.display = 'none';
         window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
 
-        // Monitor de Autenticação Admin
         onAuthStateChanged(auth, (user) => {
             const itensAdmin = document.querySelectorAll('.admin-only');
             if (user) {
@@ -301,9 +300,6 @@
 
         document.getElementById('btn-sair').addEventListener('click', () => signOut(auth));
 
-        // --- ESCUTAS PÚBLICAS EM TEMPO REAL ---
-
-        // 1. Escutar Configuração Geral do Jogo Ativo
         onSnapshot(doc(db, "configuracao", "atual"), (snap) => {
             if (snap.exists()) {
                 sorteioAtivoId = snap.data().sorteioAtivoId || "padrao";
@@ -311,7 +307,6 @@
             sincronizarDadosSorteioAtivo();
         });
 
-        // 2. Escutar Todos os Sorteios Agendados / Criados
         onSnapshot(collection(db, "sorteios"), (snap) => {
             listaSorteiosGlobal = [];
             snap.forEach(d => listaSorteiosGlobal.push({ id: d.id, ...d.data() }));
@@ -319,7 +314,6 @@
             sincronizarDadosSorteioAtivo();
         });
 
-        // 3. Escutar Todas as Cartelas Cadastradas
         onSnapshot(collection(db, "cartelas"), (snap) => {
             cartelas = [];
             snap.forEach(d => cartelas.push({ ...d.data(), firestoreId: d.id }));
@@ -336,18 +330,19 @@
         let unsubBolasAtual = null;
         function sincronizarDadosSorteioAtivo() {
             const atual = listaSorteiosGlobal.find(s => s.id === sorteioAtivoId);
-            if (!atual) {
-                document.getElementById('sorteioAtivoNome').innerText = "Nenhum Sorteio Selecionado como Ativo";
+            if (!atual || sorteioAtivoId === "nenhum") {
+                document.getElementById('sorteioAtivoNome').innerText = "🚫 Nenhum Sorteio Ativo no Momento";
                 maxBolasGlobal = 75;
-                document.getElementById('listaPremiosPublico').innerHTML = "Aguardando definição do administrador.";
+                document.getElementById('listaPremiosPublico').innerHTML = "Aguardando a ativação de uma rodada pelo administrador.";
+                bolasSorteadas = [];
+                renderizarPainelBolas();
+                atualizarRankingPublico();
                 return;
             }
 
-            // Exibir Título e Máximo de Bolas
             document.getElementById('sorteioAtivoNome').innerText = `🎯 Rodada Ativa: ${atual.titulo} (${atual.data})`;
             maxBolasGlobal = parseInt(atual.maxBolas) || 75;
 
-            // Exibir Lista de Prêmios do Sorteio Ativo
             const divPremios = document.getElementById('listaPremiosPublico');
             if(atual.premios && atual.premios.length > 0) {
                 divPremios.innerHTML = atual.premios.map((p, index) => `<div class="premio-item">🏅 ${index+1}º Prêmio: ${p}</div>`).join('');
@@ -355,7 +350,6 @@
                 divPremios.innerHTML = "Nenhum prêmio listado para esta rodada.";
             }
 
-            // Ligar escuta em tempo real apenas nas bolas DO sorteio ativo
             if(unsubBolasAtual) unsubBolasAtual();
             unsubBolasAtual = onSnapshot(doc(db, "sorteio_bolas", sorteioAtivoId), (snapBolas) => {
                 bolasSorteadas = [];
@@ -385,7 +379,7 @@
                 const isAtivo = s.id === sorteioAtivoId;
                 const statusBadge = isAtivo ? '<span class="badge ativo">Ativo</span>' : '<span class="badge agendado">Agendado</span>';
                 
-                // 1. Alimentar Tabela Pública de Próximos Sorteios
+                // Tabela pública remove os que não estão ativos
                 tabelaSorteiosAgendados.innerHTML += `
                     <tr>
                         <td><strong>${s.titulo}</strong></td>
@@ -394,9 +388,9 @@
                     </tr>
                 `;
 
-                // 2. Alimentar Painel do Administrador (Com botões de ação)
+                // Botão dinâmico: Se está ativo, mostra opção de "Desativar" para liberar a exclusão
                 const btnAcao = isAtivo 
-                    ? `<button class="btn-success btn-sm" disabled>✓ Já Ativo</button>`
+                    ? `<button onclick="desativarSorteioAtual()" class="btn-danger btn-sm">⏸️ Desativar</button>`
                     : `<button onclick="definirSorteioAtivo('${s.id}')" class="btn-warn btn-sm">🎯 Ativar</button>`;
                 
                 tabelaAdmin.innerHTML += `
@@ -414,47 +408,58 @@
             });
         }
 
-        // Criar Novo Sorteio com Prêmios
         document.getElementById('btnSalvarSorteio').addEventListener('click', () => {
             const titulo = document.getElementById('sorteioTitulo').value.trim();
             const data = document.getElementById('bingoData').value;
             const maxBolas = document.getElementById('bingoMaxBolas').value;
             
-            // Capturar os inputs de prêmios preenchidos
             const premioInputs = document.querySelectorAll('.input-premio');
             const listaPremios = Array.from(premioInputs).map(i => i.value.trim()).filter(val => val !== "");
 
             if (!titulo || !data) return alert("Por favor, preencha o título e a data do sorteio.");
             if (listaPremios.length === 0) return alert("Cadastre pelo menos 1 prêmio para salvar o sorteio.");
 
-            addDoc(collection(db, "sorteios"), {
+            addDoc(collection(db, "sorteos"), {
                 titulo: titulo,
                 data: data,
                 maxBolas: Number(maxBolas),
                 premios: listaPremios
             }).then((docRef) => {
-                // Inicializa o nó de bolas zerado para o novo sorteio
                 setDoc(doc(db, "sorteio_bolas", docRef.id), { lista: [] });
                 alert("Sorteio e prêmios agendados com sucesso!");
                 
-                // Limpar campos
                 document.getElementById('sorteioTitulo').value = '';
                 document.getElementById('bingoData').value = '';
                 premioInputs.forEach(i => i.value = '');
             }).catch(err => alert("Erro ao criar sorteio: " + err.message));
         });
 
-        // Mudar o sorteio Ativo da Plataforma
+        // --- EXPOSIÇÃO DAS FUNÇÕES PARA O ESCOPO GLOBAL (WINDOW) ---
         window.definirSorteioAtivo = function(id) {
             setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: id }, { merge: true })
                 .then(() => alert("Sorteio alternado com sucesso!"));
         };
 
-        window.deletarSorteio = function(id) {
-            if(id === sorteioAtivoId) return alert("Você não pode excluir um sorteio que está ativo no momento!");
+        // Função explícita para desativar qualquer sorteio da rodada
+        window.desativarSorteioAtual = function() {
+            setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: "nenhum" }, { merge: true })
+                .then(() => alert("Sorteio desativado! Sistema em modo de espera."));
+        };
+
+        window.deletarSorteio = async function(id) {
             if(confirm("Deseja apagar esse agendamento e todo o seu histórico de bolas chamadas?")) {
-                deleteDoc(doc(db, "sorteos", id));
-                deleteDoc(doc(db, "sorteio_bolas", id));
+                try {
+                    // Se o sorteio deletado for o ativo, limpa a ativação primeiro antes de remover
+                    if(id === sorteioAtivoId) {
+                        await setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: "nenhum" }, { merge: true });
+                    }
+                    
+                    await deleteDoc(doc(db, "sorteos", id));
+                    await deleteDoc(doc(db, "sorteio_bolas", id));
+                    alert("Sorteio removido do banco com sucesso!");
+                } catch (err) {
+                    alert("Erro ao deletar: " + err.message);
+                }
             }
         };
 
@@ -487,7 +492,7 @@
                 bola.innerText = i.toString().padStart(2, '0');
                 
                 bola.onclick = () => {
-                    if (!isAdminLogado) return;
+                    if (!isAdminLogado || sorteioAtivoId === "nenhum" || sorteioAtivoId === "padrao") return;
                     let novaLista = [...bolasSorteadas];
                     if (setBolas.has(i)) {
                         novaLista = novaLista.filter(n => n !== i);
@@ -528,7 +533,6 @@
             });
         }
 
-        // Métodos de Cartelas mantidos idênticos
         document.getElementById('btnGerarAleatorio').addEventListener('click', () => {
             let numeros = new Set();
             while (numeros.size < 20) {
@@ -587,6 +591,7 @@
         }
 
         document.getElementById('btnLimparSorteio').addEventListener('click', () => {
+            if(sorteioAtivoId === "nenhum") return alert("Nenhum sorteio ativo para resetar.");
             if(confirm("Deseja limpar as dezenas sorteadas atuais deste sorteio?")) {
                 setDoc(doc(db, "sorteio_bolas", sorteioAtivoId), { lista: [] });
             }
