@@ -102,17 +102,19 @@
             100% { transform: scale(1); }
         }
 
+        /* Configuração de Impressão */
         @media print {
-            body * { display: none; }
-            #secao-impressao, #secao-impressao * { display: block; }
-            .box { box-shadow: none; padding: 0; border: none; }
-            .cartela-lista { page-break-inside: avoid; border: 3px solid #000 !important; margin-bottom: 40px; padding: 25px; background: #fff !important; }
-            .cartela-title { font-size: 1.4rem !important; color: #000 !important; font-weight: bold; }
+            body { background: #fff !important; color: #000 !important; }
+            header, .auth-bar, .modal, .admin-only, .no-print, h2, #txtInstrucaoBola, .badge-info, .painel-bolas, footer { 
+                display: none !important; 
+            }
+            .container { display: block !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
+            .box.cartelas { display: block !important; box-shadow: none !important; padding: 0 !important; border: none !important; background: transparent !important; }
+            .cartela-lista { display: block !important; page-break-inside: avoid !important; border: 3px solid #000 !important; margin-bottom: 40px !important; padding: 25px !important; background: #fff !important; }
+            .cartela-title { font-size: 1.4rem !important; color: #000 !important; font-weight: bold !important; }
             .cartela-impressao { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 10px !important; }
             .num-impresso { border: 2px solid #000 !important; background: #fff !important; color: #000 !important; font-size: 1.4rem !important; padding: 15px 5px !important; }
-            .num-impresso.marcado { text-decoration: line-through; background: #e2e8f0 !important; }
-            footer { display: block !important; position: fixed; bottom: 0; left: 0; right: 0; text-align: center; border: none; }
-            .btn-deletar, .btn-salvar, .no-print, h2 { display: none !important; }
+            .num-impresso.marcado { text-decoration: line-through !important; background: #e2e8f0 !important; color: #000 !important; }
         }
     </style>
 </head>
@@ -145,7 +147,6 @@
     </div>
 
     <div class="container">
-        
         <div>
             <div class="box admin-only">
                 <h2>⚙️ 1. Configurar Novo Bingo</h2>
@@ -172,15 +173,12 @@
 
             <div class="box sorteio">
                 <h2>🔮 Painel de Bolas Chamadas</h2>
-                
                 <div id="alertaGanhador">🎉 BINGO! Temos cartela(s) vencedora(s)!</div>
-
                 <div class="badge-info">
-                    <strong>Prêmio Atual:</strong> <span id="infoPremio">Carregando...</span><br>
+                    <strong>Prêmio Atual:</strong> <span id="infoPremio">Padrão</span><br>
                     <strong>Data:</strong> <span id="infoData">--/--/----</span> | 
                     <strong>Total de Bolas:</strong> <span id="infoMaxBolas">75</span>
                 </div>
-
                 <p id="txtInstrucaoBola" style="font-size: 0.9rem; color: #475569;">Aguardando o administrador sortear as bolas...</p>
                 <div class="painel-bolas" id="painelBolas"></div>
                 <button class="btn-danger admin-only" style="margin-top: 20px;" id="btnLimparSorteio">Limpar Sorteio Atual</button>
@@ -190,7 +188,6 @@
         <div>
             <div class="box admin-only">
                 <h2>🎫 2. Adicionar / Customizar Cartela</h2>
-                
                 <div class="form-row">
                     <div class="form-group">
                         <label>Número/ID da Cartela:</label>
@@ -201,11 +198,8 @@
                         <input type="text" id="cartelaDono" placeholder="Ex: João Silva">
                     </div>
                 </div>
-
                 <button class="btn-warn" id="btnGerarAleatorio" style="margin-bottom: 15px; width: 100%;">🎲 Preencher com 20 Números Aleatórios</button>
-                
                 <div class="grid-cartela" id="camposCartela"></div>
-                
                 <button class="btn-success" style="width: 100%; padding: 14px;" id="btnSalvarCartela">💾 Guardar Cartela no Firestore</button>
             </div>
 
@@ -215,7 +209,6 @@
                     <button style="flex: 1;" class="btn-warn" id="btnImprimirNativo">🖨️ Imprimir via Navegador</button>
                     <button style="flex: 1;" id="btnExportarPDF">📄 Salvar em PDF (Download)</button>
                 </div>
-                
                 <div id="listaCartelas"></div>
             </div>
         </div>
@@ -270,8 +263,9 @@
 
             signInWithEmailAndPassword(auth, email, senha)
                 .then(() => modalLogin.classList.remove('ativo'))
-                .catch(() => {
-                    erroEl.innerText = "Credenciais incorretas!";
+                .catch((error) => {
+                    console.error("Erro completo:", error);
+                    erroEl.innerText = "Credenciais incorretas ou método desativado!";
                     erroEl.style.display = 'block';
                 });
         });
@@ -299,30 +293,29 @@
         // ---------------- SINCRONIZAÇÃO FIRESTORE (REALTIME) ----------------
         initInputs();
 
-        // Escuta as configurações globais do jogo
         onSnapshot(doc(db, "configuracao", "atual"), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 maxBolasGlobal = parseInt(data.maxBolas) || 75;
-                document.getElementById('infoPremio').innerText = data.premio;
+                document.getElementById('infoPremio').innerText = data.premio || "Notebook Gamer";
                 document.getElementById('infoMaxBolas').innerText = maxBolasGlobal;
-                document.getElementById('infoData').innerText = data.dataStr;
+                document.getElementById('infoData').innerText = data.dataStr || "--/--/----";
                 document.getElementById('bingoMaxBolas').value = maxBolasGlobal;
-                document.getElementById('bingoPremio').value = data.premio;
-                
-                // Escuta as bolas sorteadas salvas no banco
-                onSnapshot(doc(db, "sorteio", "bolas"), (sorteioSnap) => {
-                    bolasSorteadas.clear();
-                    if (sorteioSnap.exists() && sorteioSnap.data().lista) {
-                        sorteioSnap.data().lista.forEach(n => bolasSorteadas.add(n));
-                    }
-                    renderizarPainelBolas();
-                    verificarGanhadores();
-                });
+                document.getElementById('bingoPremio').value = data.premio || "Notebook Gamer";
             }
+            renderizarPainelBolas();
+            verificarGanhadores();
         });
 
-        // Escuta a lista de cartelas cadastradas
+        onSnapshot(doc(db, "sorteio", "bolas"), (sorteioSnap) => {
+            bolasSorteadas.clear();
+            if (sorteioSnap.exists() && sorteioSnap.data().lista) {
+                sorteioSnap.data().lista.forEach(n => bolasSorteadas.add(n));
+            }
+            renderizarPainelBolas();
+            verificarGanhadores();
+        });
+
         onSnapshot(collection(db, "cartelas"), (snapshot) => {
             cartelas = [];
             snapshot.forEach((doc) => {
@@ -333,7 +326,7 @@
             verificarGanhadores();
         });
 
-        // ---------------- FUNÇÕES DE RENDERIZAÇÃO E INTERAÇÃO ----------------
+        // ---------------- FUNÇÕES INTERNAS ----------------
         function initInputs() {
             camposCartela.innerHTML = '';
             for (let i = 0; i < 20; i++) {
@@ -355,10 +348,9 @@
                 bola.innerText = i.toString().padStart(2, '0');
                 
                 bola.onclick = () => {
-                    if (!isAdminLogado) return; // Visitantes não conseguem clicar
+                    if (!isAdminLogado) return;
                     if (bolasSorteadas.has(i)) bolasSorteadas.delete(i);
                     else bolasSorteadas.add(i);
-                    
                     setDoc(doc(db, "sorteio", "bolas"), { lista: Array.from(bolasSorteadas) });
                 };
                 painelBolas.appendChild(bola);
@@ -371,7 +363,7 @@
             let nomesGanhadores = [];
 
             if (cartelas.length === 0) {
-                listaCartelas.innerHTML = '<p style="color: #64748b;">Nenhuma cartela ativa no momento.</p>';
+                listaCartelas.innerHTML = '<p style="color: #64748b;" class="no-print">Nenhuma cartela ativa no momento.</p>';
                 alertaGanhador.style.display = 'none';
                 return;
             }
@@ -392,13 +384,12 @@
 
                 const divCartela = document.createElement('div');
                 divCartela.className = `cartela-lista ${ganhou ? 'ganhadora' : ''}`;
-                
                 const numerosJSON = JSON.stringify(cartela.numeros);
 
                 let html = `
                     <div class="cartela-header">
                         <span class="cartela-title"><strong>Cartela Nº ${cartela.id}</strong> - <small>Dono: ${cartela.dono}</small></span>
-                        <div>
+                        <div class="no-print">
                             <span style="font-size:0.85rem; margin-right:10px; color:#64748b;">(${acertos}/20 acertos)</span>
                             <button onclick="window.editarCartela('${cartela.firestoreId}', '${cartela.id}', '${cartela.dono}', '${numerosJSON}')" style="padding:4px 8px; font-size:12px;" class="btn-warn admin-only-inline">Editar</button>
                             <button onclick="window.deletarCartela('${cartela.firestoreId}')" style="padding:4px 8px; font-size:12px;" class="btn-danger admin-only-inline">Excluir</button>
@@ -425,7 +416,7 @@
             }
         }
 
-        // ---------------- INTERAÇÕES EXCLUSIVAS DO ADMIN ----------------
+        // ---------------- AÇÕES ADMIN ----------------
         document.getElementById('btnSalvarConfig').addEventListener('click', () => {
             const premio = document.getElementById('bingoPremio').value;
             const dataStrRaw = document.getElementById('bingoData').value;
@@ -437,11 +428,7 @@
                 dataFormatada = `${parts[2]}/${parts[1]}/${parts[0]}`;
             }
 
-            setDoc(doc(db, "configuracao", "atual"), {
-                premio: premio,
-                dataStr: dataFormatada,
-                maxBolas: maxBolas
-            });
+            setDoc(doc(db, "configuracao", "atual"), { premio: premio, dataStr: dataFormatada, maxBolas: maxBolas });
         });
 
         document.getElementById('btnLimparSorteio').addEventListener('click', () => {
@@ -505,13 +492,21 @@
         document.getElementById('btnImprimirNativo').addEventListener('click', () => window.print());
         document.getElementById('btnExportarPDF').addEventListener('click', () => {
             const elemento = document.getElementById('secao-impressao');
+            const botnoPrint = elemento.querySelector('.no-print');
+            const h2Title = elemento.querySelector('h2');
+            botnoPrint.style.display = 'none';
+            if(h2Title) h2Title.style.display = 'none';
+
             html2pdf().set({
                 margin: 12,
                 filename: 'Cartelas_Bingo.pdf',
                 image: { type: 'jpeg', quality: 0.98 },
                 html2canvas: { scale: 2 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(elemento).save();
+            }).from(elemento).save().then(() => {
+                botnoPrint.style.display = 'flex';
+                if(h2Title) h2Title.style.display = 'flex';
+            });
         });
     </script>
 </body>
