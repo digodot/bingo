@@ -35,6 +35,7 @@
         .box { background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); margin-bottom: 25px; }
         .box.sorteio { border-top-color: var(--warning); }
         .box.cartelas { border-top-color: var(--success); }
+        .box.premios-box { border-top-color: #ec4899; }
         
         h2 { font-size: 1.4rem; margin-bottom: 20px; color: #334155; display: flex; align-items: center; gap: 10px; }
         
@@ -48,6 +49,7 @@
         .btn-success { background: var(--success); }
         .btn-danger { background: var(--danger); }
         .btn-warn { background: var(--warning); color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 0.85rem; border-radius: 6px; }
         
         /* Painel de Bolas */
         .painel-bolas { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; }
@@ -70,7 +72,17 @@
         .num-impresso { background: #f1f5f9; padding: 14px 5px; text-align: center; border: 1px solid #cbd5e1; font-weight: bold; border-radius: 8px; }
         .num-impresso.marcado { background: var(--success); color: white; }
 
-        /* Lista de Ranking do Público */
+        /* Estilizações das listas de prêmios e tabelas de agendados */
+        .premio-item { padding: 10px 14px; background: #fdf2f8; border-left: 4px solid #ec4899; border-radius: 6px; margin-bottom: 6px; font-weight: 500; font-size: 0.95rem; }
+        .sorteio-ativo-banner { background: #e0e7ff; border: 2px solid #c7d2fe; color: #3730a3; padding: 12px; border-radius: 10px; margin-bottom: 15px; font-weight: bold; text-align: center; }
+        
+        .tabela-sorteios { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9rem; }
+        .tabela-sorteios th, .tabela-sorteios td { padding: 10px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        .tabela-sorteios th { background: #f8fafc; font-weight: 600; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.75rem; }
+        .badge.ativo { background: #dcfce7; color: #166534; }
+        .badge.agendado { background: #fef3c7; color: #92400e; }
+
         .ranking-item { display: flex; justify-content: space-between; padding: 12px 15px; background: #f8fafc; border-left: 5px solid var(--primary); margin-bottom: 8px; border-radius: 6px; font-weight: bold; }
         .ranking-item.ganhando { border-left-color: var(--success); background: #f0fdf4; }
 
@@ -115,9 +127,12 @@
         
         <div>
             <div class="box admin-only" id="box-config">
-                <h2>⚙️ Configurar Sorteio</h2>
+                <h2>⚙️ Criar / Agendar Novo Sorteio</h2>
                 <div class="form-row">
+                    <div class="form-group"><label>Título do Sorteio:</label><input type="text" id="sorteioTitulo" placeholder="Ex: Grande Bingo de São João"></div>
                     <div class="form-group"><label>Data:</label><input type="date" id="bingoData"></div>
+                </div>
+                <div class="form-row">
                     <div class="form-group">
                         <label>Max Bolas:</label>
                         <select id="bingoMaxBolas">
@@ -126,13 +141,43 @@
                         </select>
                     </div>
                 </div>
-                <button id="btnSalvarConfig" class="btn-warn">💾 Salvar Configurações</button>
-                <button id="btnIniciarJogo" class="btn-success">🚀 Iniciar Novo Jogo</button>
+                
+                <h3 style="font-size:1rem; margin: 15px 0 8px 0; color:#475569;">🎁 Cadastrar Prêmios (Até 5)</h3>
+                <div style="display:grid; gap:8px; margin-bottom:15px;">
+                    <input type="text" class="input-premio" placeholder="1º Prêmio (Ex: Bicicleta Aro 29)">
+                    <input type="text" class="input-premio" placeholder="2º Prêmio (Ex: R$ 500 no Pix)">
+                    <input type="text" class="input-premio" placeholder="3º Prêmio (Opcional)">
+                    <input type="text" class="input-premio" placeholder="4º Prêmio (Opcional)">
+                    <input type="text" class="input-premio" placeholder="5º Prêmio (Opcional)">
+                </div>
+                
+                <button id="btnSalvarSorteio" class="btn-success" style="width:100%;">💾 Gravar e Agendar Sorteio</button>
+                
+                <hr style="margin:20px 0; border:0; border-top:1px solid #e2e8f0;">
+                
+                <h3>📋 Controle de Sorteios Criados</h3>
+                <table class="tabela-sorteios">
+                    <thead>
+                        <tr>
+                            <th>Sorteio / Data</th>
+                            <th>Status</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaAcoesSorteio">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="box premios-box">
+                <h2>🎁 Prêmios da Rodada Ativa</h2>
+                <div id="listaPremiosPublico">Nenhum prêmio cadastrado para o sorteio ativo.</div>
             </div>
 
             <div class="box sorteio">
                 <h2>🔮 Painel de Bolas Chamadas</h2>
-                <div id="ultimaBolaBox" class="ultima-bola-box">Nenhuma bola chamada ainda</div>
+                <div id="sorteioAtivoNome" class="sorteio-ativo-banner">Sorteio Padrão</div>
+                <div id="ultimaBolaBox" class="ultima-bola-box">Aguardando início do sorteio...</div>
                 <div id="painelBolas" class="painel-bolas"></div>
                 <button id="btnLimparSorteio" class="btn-danger admin-only" style="margin-top:20px; width:100%">🔄 Resetar Sorteio Atual</button>
             </div>
@@ -155,6 +200,22 @@
                 <div id="rankingPublico">Carregando classificação em tempo real...</div>
             </div>
 
+            <div class="box">
+                <h2>📅 Próximos Sorteios Agendados</h2>
+                <table class="tabela-sorteios">
+                    <thead>
+                        <tr>
+                            <th>Sorteio</th>
+                            <th>Data</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaSorteiosAgendados">
+                        <tr><td colspan="3">Carregando cronograma...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
             <div class="box cartelas">
                 <h2>📋 Conferência de Cartelas</h2>
                 <select id="selectCartelas" class="no-print"><option>Carregando...</option></select>
@@ -169,7 +230,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc, updateDoc, query, getDocs } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -187,6 +248,8 @@
 
         let bolasSorteadas = [];
         let cartelas = [];
+        let listaSorteiosGlobal = [];
+        let sorteioAtivoId = "padrao";
         let maxBolasGlobal = 75;
         let isAdminLogado = false;
 
@@ -195,7 +258,6 @@
         const visualizacaoCartela = document.getElementById('visualizacaoCartela');
         const modal = document.getElementById('modalLogin');
 
-        // Estruturar inputs invisíveis do admin
         for (let i = 0; i < 20; i++) {
             const input = document.createElement('input');
             input.type = 'number';
@@ -203,12 +265,11 @@
             camposCartela.appendChild(input);
         }
 
-        // Eventos do Modal de Login no Topo
         document.getElementById('btn-abrir-login').onclick = () => modal.style.display = 'flex';
         document.getElementById('fecharModal').onclick = () => modal.style.display = 'none';
         window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
 
-        // Monitor de Estado Admin (Esconder/Mostrar Ferramentas de Edição)
+        // Monitor de Autenticação Admin
         onAuthStateChanged(auth, (user) => {
             const itensAdmin = document.querySelectorAll('.admin-only');
             if (user) {
@@ -217,7 +278,6 @@
                 document.getElementById('btn-abrir-login').style.display = 'none';
                 document.getElementById('btn-sair').style.display = 'inline-flex';
                 itensAdmin.forEach(el => el.style.display = 'block');
-                // Ajustes específicos inline para botões que herdam flex/grid
                 document.getElementById('btnLimparSorteio').style.display = 'block';
                 if(document.getElementById('btnExcluirSelecionada')) document.getElementById('btnExcluirSelecionada').style.display = 'inline-flex';
             } else {
@@ -228,33 +288,38 @@
             }
             renderizarPainelBolas();
             atualizarRankingPublico();
+            renderizarTabelasSorteios();
         });
 
-        // Trigger de Login
         document.getElementById('btn-entrar').addEventListener('click', () => {
             const email = document.getElementById('login-email').value.trim();
             const senha = document.getElementById('login-senha').value;
             const erroTxt = document.getElementById('erro-login');
             erroTxt.style.display = 'none';
-
-            signInWithEmailAndPassword(auth, email, senha).catch(() => {
-                erroTxt.style.display = 'block';
-            });
+            signInWithEmailAndPassword(auth, email, senha).catch(() => erroTxt.style.display = 'block');
         });
 
         document.getElementById('btn-sair').addEventListener('click', () => signOut(auth));
 
-        // Ouvintes globais e públicos do Firestore (Funcionam para todo mundo sem logar!)
-        onSnapshot(doc(db, "sorteio", "bolas"), (snap) => {
-            bolasSorteadas = [];
-            if (snap.exists() && snap.data().lista) {
-                bolasSorteadas = snap.data().lista.map(Number);
+        // --- ESCUTAS PÚBLICAS EM TEMPO REAL ---
+
+        // 1. Escutar Configuração Geral do Jogo Ativo
+        onSnapshot(doc(db, "configuracao", "atual"), (snap) => {
+            if (snap.exists()) {
+                sorteioAtivoId = snap.data().sorteioAtivoId || "padrao";
             }
-            renderizarPainelBolas();
-            atualizarRankingPublico();
-            atualizarVisualizacaoCartela();
+            sincronizarDadosSorteioAtivo();
         });
 
+        // 2. Escutar Todos os Sorteios Agendados / Criados
+        onSnapshot(collection(db, "sorteios"), (snap) => {
+            listaSorteiosGlobal = [];
+            snap.forEach(d => listaSorteiosGlobal.push({ id: d.id, ...d.data() }));
+            renderizarTabelasSorteios();
+            sincronizarDadosSorteioAtivo();
+        });
+
+        // 3. Escutar Todas as Cartelas Cadastradas
         onSnapshot(collection(db, "cartelas"), (snap) => {
             cartelas = [];
             snap.forEach(d => cartelas.push({ ...d.data(), firestoreId: d.id }));
@@ -267,15 +332,131 @@
             atualizarRankingPublico();
             atualizarVisualizacaoCartela();
         });
-        
-        onSnapshot(doc(db, "configuracao", "atual"), (snap) => {
-            if (snap.exists()) {
-                maxBolasGlobal = parseInt(snap.data().maxBolas) || 75;
-                document.getElementById('bingoMaxBolas').value = maxBolasGlobal;
-                document.getElementById('bingoData').value = snap.data().dataRaw || "";
-                renderizarPainelBolas();
+
+        let unsubBolasAtual = null;
+        function sincronizarDadosSorteioAtivo() {
+            const atual = listaSorteiosGlobal.find(s => s.id === sorteioAtivoId);
+            if (!atual) {
+                document.getElementById('sorteioAtivoNome').innerText = "Nenhum Sorteio Selecionado como Ativo";
+                maxBolasGlobal = 75;
+                document.getElementById('listaPremiosPublico').innerHTML = "Aguardando definição do administrador.";
+                return;
             }
+
+            // Exibir Título e Máximo de Bolas
+            document.getElementById('sorteioAtivoNome').innerText = `🎯 Rodada Ativa: ${atual.titulo} (${atual.data})`;
+            maxBolasGlobal = parseInt(atual.maxBolas) || 75;
+
+            // Exibir Lista de Prêmios do Sorteio Ativo
+            const divPremios = document.getElementById('listaPremiosPublico');
+            if(atual.premios && atual.premios.length > 0) {
+                divPremios.innerHTML = atual.premios.map((p, index) => `<div class="premio-item">🏅 ${index+1}º Prêmio: ${p}</div>`).join('');
+            } else {
+                divPremios.innerHTML = "Nenhum prêmio listado para esta rodada.";
+            }
+
+            // Ligar escuta em tempo real apenas nas bolas DO sorteio ativo
+            if(unsubBolasAtual) unsubBolasAtual();
+            unsubBolasAtual = onSnapshot(doc(db, "sorteio_bolas", sorteioAtivoId), (snapBolas) => {
+                bolasSorteadas = [];
+                if (snapBolas.exists() && snapBolas.data().lista) {
+                    bolasSorteadas = snapBolas.data().lista.map(Number);
+                }
+                renderizarPainelBolas();
+                atualizarRankingPublico();
+                atualizarVisualizacaoCartela();
+            });
+        }
+
+        function renderizarTabelasSorteios() {
+            const tabelaAdmin = document.getElementById('tabelaAcoesSorteio');
+            const tabelaSorteiosAgendados = document.getElementById('tabelaSorteiosAgendados');
+            
+            tabelaAdmin.innerHTML = '';
+            tabelaSorteiosAgendados.innerHTML = '';
+
+            if (listaSorteiosGlobal.length === 0) {
+                tabelaAdmin.innerHTML = '<tr><td colspan="3">Nenhum sorteio cadastrado.</td></tr>';
+                tabelaSorteiosAgendados.innerHTML = '<tr><td colspan="3">Nenhum sorteio programado.</td></tr>';
+                return;
+            }
+
+            listaSorteiosGlobal.forEach(s => {
+                const isAtivo = s.id === sorteioAtivoId;
+                const statusBadge = isAtivo ? '<span class="badge ativo">Ativo</span>' : '<span class="badge agendado">Agendado</span>';
+                
+                // 1. Alimentar Tabela Pública de Próximos Sorteios
+                tabelaSorteiosAgendados.innerHTML += `
+                    <tr>
+                        <td><strong>${s.titulo}</strong></td>
+                        <td>${s.data}</td>
+                        <td>${statusBadge}</td>
+                    </tr>
+                `;
+
+                // 2. Alimentar Painel do Administrador (Com botões de ação)
+                const btnAcao = isAtivo 
+                    ? `<button class="btn-success btn-sm" disabled>✓ Já Ativo</button>`
+                    : `<button onclick="definirSorteioAtivo('${s.id}')" class="btn-warn btn-sm">🎯 Ativar</button>`;
+                
+                tabelaAdmin.innerHTML += `
+                    <tr>
+                        <td><strong>${s.titulo}</strong><br><span style="font-size:0.8rem; color:#64748b;">${s.data}</span></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div style="display:flex; gap:5px;">
+                                ${btnAcao}
+                                <button onclick="deletarSorteio('${s.id}')" class="btn-danger btn-sm">❌</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Criar Novo Sorteio com Prêmios
+        document.getElementById('btnSalvarSorteio').addEventListener('click', () => {
+            const titulo = document.getElementById('sorteioTitulo').value.trim();
+            const data = document.getElementById('bingoData').value;
+            const maxBolas = document.getElementById('bingoMaxBolas').value;
+            
+            // Capturar os inputs de prêmios preenchidos
+            const premioInputs = document.querySelectorAll('.input-premio');
+            const listaPremios = Array.from(premioInputs).map(i => i.value.trim()).filter(val => val !== "");
+
+            if (!titulo || !data) return alert("Por favor, preencha o título e a data do sorteio.");
+            if (listaPremios.length === 0) return alert("Cadastre pelo menos 1 prêmio para salvar o sorteio.");
+
+            addDoc(collection(db, "sorteios"), {
+                titulo: titulo,
+                data: data,
+                maxBolas: Number(maxBolas),
+                premios: listaPremios
+            }).then((docRef) => {
+                // Inicializa o nó de bolas zerado para o novo sorteio
+                setDoc(doc(db, "sorteio_bolas", docRef.id), { lista: [] });
+                alert("Sorteio e prêmios agendados com sucesso!");
+                
+                // Limpar campos
+                document.getElementById('sorteioTitulo').value = '';
+                document.getElementById('bingoData').value = '';
+                premioInputs.forEach(i => i.value = '');
+            }).catch(err => alert("Erro ao criar sorteio: " + err.message));
         });
+
+        // Mudar o sorteio Ativo da Plataforma
+        window.definirSorteioAtivo = function(id) {
+            setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: id }, { merge: true })
+                .then(() => alert("Sorteio alternado com sucesso!"));
+        };
+
+        window.deletarSorteio = function(id) {
+            if(id === sorteioAtivoId) return alert("Você não pode excluir um sorteio que está ativo no momento!");
+            if(confirm("Deseja apagar esse agendamento e todo o seu histórico de bolas chamadas?")) {
+                deleteDoc(doc(db, "sorteos", id));
+                deleteDoc(doc(db, "sorteio_bolas", id));
+            }
+        };
 
         function renderizarPainelBolas() {
             const painel = document.getElementById('painelBolas');
@@ -305,7 +486,6 @@
                 
                 bola.innerText = i.toString().padStart(2, '0');
                 
-                // Só permite clicar se for o administrador autenticado
                 bola.onclick = () => {
                     if (!isAdminLogado) return;
                     let novaLista = [...bolasSorteadas];
@@ -314,7 +494,7 @@
                     } else {
                         novaLista.push(i);
                     }
-                    setDoc(doc(db, "sorteio", "bolas"), { lista: novaLista });
+                    setDoc(doc(db, "sorteio_bolas", sorteioAtivoId), { lista: novaLista });
                 };
                 painel.appendChild(bola);
             }
@@ -333,11 +513,9 @@
                 return { ...c, acertos };
             });
 
-            // Ordena por maior número de acertos
             dadosRanking.sort((a, b) => b.acertos - a.acertos);
 
             rankingDiv.innerHTML = '';
-            // Pega as 5 melhores cartelas da rodada
             dadosRanking.slice(0, 5).forEach(c => {
                 const classeGanhando = c.acertos === 20 ? 'ganhando' : '';
                 const textoStatus = c.acertos === 20 ? '🏆 BINGO!' : `${c.acertos} / 20 acertos`;
@@ -350,7 +528,7 @@
             });
         }
 
-        // Funções internas mantidas intactas
+        // Métodos de Cartelas mantidos idênticos
         document.getElementById('btnGerarAleatorio').addEventListener('click', () => {
             let numeros = new Set();
             while (numeros.size < 20) {
@@ -408,22 +586,9 @@
             `;
         }
 
-        document.getElementById('btnSalvarConfig').addEventListener('click', () => {
-            const maxBolas = document.getElementById('bingoMaxBolas').value;
-            const dataRaw = document.getElementById('bingoData').value;
-            setDoc(doc(db, "configuracao", "atual"), { maxBolas: Number(maxBolas), dataRaw: dataRaw }, { merge: true })
-                .then(() => alert("Configurações atualizadas!"));
-        });
-
-        document.getElementById('btnIniciarJogo').addEventListener('click', () => {
-            if(confirm("Deseja mesmo resetar e iniciar uma nova rodada do zero?")) {
-                setDoc(doc(db, "sorteio", "bolas"), { lista: [] });
-            }
-        });
-
         document.getElementById('btnLimparSorteio').addEventListener('click', () => {
-            if(confirm("Deseja limpar as dezenas sorteadas atuais?")) {
-                setDoc(doc(db, "sorteio", "bolas"), { lista: [] });
+            if(confirm("Deseja limpar as dezenas sorteadas atuais deste sorteio?")) {
+                setDoc(doc(db, "sorteio_bolas", sorteioAtivoId), { lista: [] });
             }
         });
 
