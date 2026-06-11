@@ -19,423 +19,338 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background: #f1f5f9; color: var(--text-main); padding-bottom: 60px; }
         
-        /* Header */
-        header { background: var(--bg-gradient); color: white; padding: 25px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); position: relative; }
-        header h1 { font-size: 2.2rem; margin-bottom: 5px; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
-        header p { font-weight: 300; opacity: 0.9; }
-
-        /* Botão de Login no Topo */
-        .auth-bar { position: absolute; top: 25px; right: 20px; }
+        header { background: var(--bg-gradient); color: white; padding: 25px 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; justify-content: space-between; align-items: center; }
+        header h1 { font-size: 2rem; text-shadow: 2px 2px 4px rgba(0,0,0,0.2); }
         
-        /* Container Principal */
         .container { max-width: 1300px; margin: 30px auto; padding: 0 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
         
-        /* Elementos de Controle de Visibilidade do Admin */
-        .admin-only { display: none !important; }
-        body.is-admin .admin-only { display: block !important; }
-        body.is-admin .admin-only-inline { display: inline-flex !important; }
-        
         /* Modal de Login */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal.ativo { display: flex; }
-        .login-container { max-width: 400px; width: 90%; padding: 30px; border-radius: 16px; background: white; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); border-top: 5px solid var(--primary); position: relative; }
-        .fechar-modal { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.2rem; font-weight: bold; color: #64748b; }
+        .modal-login { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-conteudo { max-width: 450px; width: 90%; padding: 30px; background: white; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); text-align: center; position: relative; }
+        .fechar-modal { position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #64748b; }
 
-        /* Box/Cards */
+        /* Blocos Administrativos Ocultos por Padrão */
+        .admin-only { display: none; }
+
         .box { background: var(--card-bg); padding: 25px; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); border-top: 5px solid var(--primary); margin-bottom: 25px; }
         .box.sorteio { border-top-color: var(--warning); }
         .box.cartelas { border-top-color: var(--success); }
         
         h2 { font-size: 1.4rem; margin-bottom: 20px; color: #334155; display: flex; align-items: center; gap: 10px; }
         
-        /* Formulários */
-        .form-group { margin-bottom: 15px; }
-        .form-row { display: flex; gap: 15px; }
-        .form-row .form-group { flex: 1; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 10px; }
+        .form-group { flex: 1; margin-bottom: 15px; }
         label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9rem; color: #475569; }
-        input, select { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; transition: 0.2s; }
-        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+        input, select { width: 100%; padding: 10px 14px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1rem; }
         
-        /* Botões */
-        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
-        button:hover { background: var(--primary-hover); transform: translateY(-1px); }
+        button { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        button:hover { transform: translateY(-1px); opacity: 0.9; }
         .btn-success { background: var(--success); }
-        .btn-success:hover { background: #059669; }
         .btn-danger { background: var(--danger); }
-        .btn-danger:hover { background: #dc2626; }
         .btn-warn { background: var(--warning); color: #fff; }
-        .btn-warn:hover { background: #d97706; }
-        .btn-auth { background: rgba(255, 255, 255, 0.2); border: 1px solid white; }
-        .btn-auth:hover { background: white; color: var(--primary); }
-        
-        /* Painel do Bingo Ativo */
-        .badge-info { background: #eef2ff; color: var(--primary); padding: 15px; border-radius: 12px; margin-bottom: 20px; border-left: 4px solid var(--primary); font-size: 0.95rem; line-height: 1.5; }
         
         /* Painel de Bolas */
-        .painel-bolas { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; border: 1px solid #e2e8f0; }
-        .bola { background: white; text-align: center; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%; border: 2px solid #cbd5e1; transition: 0.3s; font-size: 1.1rem; color: #64748b; user-select: none; }
-        body.is-admin .bola { cursor: pointer; }
-        .bola.sorteada { background: radial-gradient(circle at 30% 30%, #fbbf24, #d97706); color: white; border-color: #b45309; transform: scale(1.08); box-shadow: 0 4px 10px rgba(217,119,6,0.3); }
+        .painel-bolas { display: grid; grid-template-columns: repeat(10, 1fr); gap: 6px; margin-top: 15px; background: #f8fafc; padding: 15px; border-radius: 12px; }
+        .bola { background: white; text-align: center; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-weight: bold; border-radius: 50%; border: 2px solid #cbd5e1; user-select: none; }
+        .bola.sorteada { background: #cbd5e1; color: #475569; border-color: #94a3b8; }
+        .bola.ultima-sorteada { background: #d97706; color: white; border-color: #b45309; box-shadow: 0 4px 12px rgba(217,119,6,0.5); transform: scale(1.1); animation: pulsar 1s infinite alternate; }
         
-        /* Alerta de Ganhador */
-        #alertaGanhador { display: none; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; text-align: center; font-size: 1.3rem; font-weight: bold; animation: pulse 2s infinite; box-shadow: 0 10px 20px rgba(16,185,129,0.3); }
-        
-        /* Matriz de Inputs */
-        .grid-cartela { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 15px 0; background: #f8fafc; padding: 15px; border-radius: 12px; }
-        .grid-cartela input { padding: 8px; text-align: center; font-weight: bold; border-color: #cbd5e1; font-size: 1.1rem; border-radius: 6px; }
-        
-        /* Listagem das Cartelas */
-        .cartela-lista { border: 2px solid #e2e8f0; padding: 20px; margin-bottom: 20px; border-radius: 14px; background: #fff; position: relative; transition: 0.3s; }
-        .cartela-lista.ganhadora { border-color: var(--success); box-shadow: 0 0 15px rgba(16,185,129,0.4); background: #f0fdf4; }
-        .cartela-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px dashed #cbd5e1; padding-bottom: 8px; }
-        .cartela-title { font-size: 1.1rem; color: #334155; }
-        
-        .cartela-impressao { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-        .num-impresso { background: #f1f5f9; padding: 12px 5px; text-align: center; border: 1px solid #cbd5e1; font-weight: bold; border-radius: 8px; font-size: 1.1rem; color: #475569; transition: 0.2s; }
-        .num-impresso.marcado { background: var(--success); color: white; border-color: #047857; transform: scale(0.95); }
-
-        footer { text-align: center; margin-top: 40px; padding: 20px; font-size: 0.9rem; color: #64748b; border-top: 1px solid #e2e8f0; width: 100%; }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
+        @keyframes pulsar {
+            from { transform: scale(1.05); }
+            to { transform: scale(1.15); }
         }
 
-        /* Configuração de Impressão */
+        .ultima-bola-box { background: #fff3cd; border: 2px dashed #ffeba2; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 15px; font-size: 1.2rem; font-weight: bold; color: #856404; }
+        
+        .grid-cartela { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin: 15px 0; background: #f8fafc; padding: 15px; border-radius: 12px; }
+        .grid-cartela input { padding: 8px; text-align: center; font-weight: bold; border: 1px solid #cbd5e1; border-radius: 6px; }
+        
+        .cartela-lista { border: 2px solid #cbd5e1; padding: 25px; margin-top: 20px; border-radius: 14px; background: #fff; }
+        .cartela-impressao { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+        .num-impresso { background: #f1f5f9; padding: 14px 5px; text-align: center; border: 1px solid #cbd5e1; font-weight: bold; border-radius: 8px; }
+        .num-impresso.marcado { background: var(--success); color: white; }
+
+        /* Lista de Ranking do Público */
+        .ranking-item { display: flex; justify-content: space-between; padding: 12px 15px; background: #f8fafc; border-left: 5px solid var(--primary); margin-bottom: 8px; border-radius: 6px; font-weight: bold; }
+        .ranking-item.ganhando { border-left-color: var(--success); background: #f0fdf4; }
+
+        #erro-login { color: var(--danger); margin-top: 12px; font-weight: bold; display: none; font-size: 0.95rem; }
+
         @media print {
-            body { background: #fff !important; color: #000 !important; }
-            header, .auth-bar, .modal, .admin-only, .no-print, h2, #txtInstrucaoBola, .badge-info, .painel-bolas, footer { 
-                display: none !important; 
-            }
-            .container { display: block !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
-            .box.cartelas { display: block !important; box-shadow: none !important; padding: 0 !important; border: none !important; background: transparent !important; }
-            .cartela-lista { display: block !important; page-break-inside: avoid !important; border: 3px solid #000 !important; margin-bottom: 40px !important; padding: 25px !important; background: #fff !important; }
-            .cartela-title { font-size: 1.4rem !important; color: #000 !important; font-weight: bold !important; }
-            .cartela-impressao { display: grid !important; grid-template-columns: repeat(5, 1fr) !important; gap: 10px !important; }
-            .num-impresso { border: 2px solid #000 !important; background: #fff !important; color: #000 !important; font-size: 1.4rem !important; padding: 15px 5px !important; }
-            .num-impresso.marcado { text-decoration: line-through !important; background: #e2e8f0 !important; color: #000 !important; }
+            .no-print { display: none !important; }
+            body { background: white; }
+            .container { display: block; }
+            .box:not(.cartelas) { display: none; }
+            .cartela-lista { border: 3px solid #000 !important; box-shadow: none; }
         }
     </style>
 </head>
 <body>
 
-    <header>
+    <header class="no-print">
         <h1>Bingo Master Pro</h1>
-        <p>Acompanhamento de Sorteios em Tempo Real</p>
-        <div class="auth-bar">
-            <button id="btnAbrirLogin" class="btn-auth">🔐 Área do Admin</button>
-            <button id="btnDeslogar" class="btn-danger" style="display: none;">🔒 Sair do Admin</button>
-        </div>
+        <button id="btn-abrir-login" class="btn-warn">🔒 Área do Admin</button>
+        <button id="btn-sair" class="btn-danger" style="display: none;">🚪 Sair do Painel</button>
     </header>
 
-    <div id="modalLogin" class="modal">
-        <div class="login-container">
-            <span class="fechar-modal" id="btnFecharLogin">&times;</span>
-            <h2 style="justify-content: center; margin-bottom: 25px;">🔒 Login Administrativo</h2>
-            <div class="form-group">
-                <label>E-mail:</label>
-                <input type="email" id="loginEmail" placeholder="admin@bingo.com">
+    <div id="modalLogin" class="modal-login">
+        <div class="modal-conteudo">
+            <span id="fecharModal" class="fechar-modal">&times;</span>
+            <h2 style="justify-content: center; margin-bottom: 10px;">🔒 Login Administrativo</h2>
+            <p style="color: #64748b; margin-bottom: 20px;">Acesso ao gerenciamento do Bingo</p>
+            <div class="form-group" style="text-align: left;">
+                <label>E-mail do Administrador:</label>
+                <input type="email" id="login-email" placeholder="exemplo@gmail.com" value="digodot@gmail.com">
             </div>
-            <div class="form-group" style="margin-bottom: 25px;">
+            <div class="form-group" style="text-align: left;">
                 <label>Senha:</label>
-                <input type="password" id="loginSenha" placeholder="******">
+                <input type="password" id="login-senha" placeholder="Sua senha cadastrada">
             </div>
-            <button id="btnEntrar" style="width: 100%; padding: 14px;">Entrar no Painel</button>
-            <p id="erroLogin" style="color: var(--danger); text-align: center; margin-top: 15px; font-weight: 600; display: none;"></p>
+            <button id="btn-entrar" style="width: 100%; padding: 14px;">Entrar no Painel</button>
+            <p id="erro-login">Credenciais inválidas ou erro de comunicação!</p>
         </div>
     </div>
 
     <div class="container">
+        
         <div>
-            <div class="box admin-only">
-                <h2>⚙️ 1. Configurar Novo Bingo</h2>
-                <div class="form-group">
-                    <label>Prêmio Principal:</label>
-                    <input type="text" id="bingoPremio" value="Notebook Gamer">
-                </div>
+            <div class="box admin-only" id="box-config">
+                <h2>⚙️ Configurar Sorteio</h2>
                 <div class="form-row">
+                    <div class="form-group"><label>Data:</label><input type="date" id="bingoData"></div>
                     <div class="form-group">
-                        <label>Data do Evento:</label>
-                        <input type="date" id="bingoData">
-                    </div>
-                    <div class="form-group">
-                        <label>Quantidade Máxima de Bolas:</label>
+                        <label>Max Bolas:</label>
                         <select id="bingoMaxBolas">
-                            <option value="75" selected>75 Bolas (Tradicional)</option>
+                            <option value="75">75 (Tradicional)</option>
                             <option value="90">90 Bolas</option>
-                            <option value="60">60 Bolas</option>
                         </select>
                     </div>
                 </div>
-                <button class="btn-success" id="btnSalvarConfig">Aplicar / Iniciar Bingo</button>
+                <button id="btnSalvarConfig" class="btn-warn">💾 Salvar Configurações</button>
+                <button id="btnIniciarJogo" class="btn-success">🚀 Iniciar Novo Jogo</button>
             </div>
 
             <div class="box sorteio">
                 <h2>🔮 Painel de Bolas Chamadas</h2>
-                <div id="alertaGanhador">🎉 BINGO! Temos cartela(s) vencedora(s)!</div>
-                <div class="badge-info">
-                    <strong>Prêmio Atual:</strong> <span id="infoPremio">Padrão</span><br>
-                    <strong>Data:</strong> <span id="infoData">--/--/----</span> | 
-                    <strong>Total de Bolas:</strong> <span id="infoMaxBolas">75</span>
-                </div>
-                <p id="txtInstrucaoBola" style="font-size: 0.9rem; color: #475569;">Aguardando o administrador sortear as bolas...</p>
-                <div class="painel-bolas" id="painelBolas"></div>
-                <button class="btn-danger admin-only" style="margin-top: 20px;" id="btnLimparSorteio">Limpar Sorteio Atual</button>
+                <div id="ultimaBolaBox" class="ultima-bola-box">Nenhuma bola chamada ainda</div>
+                <div id="painelBolas" class="painel-bolas"></div>
+                <button id="btnLimparSorteio" class="btn-danger admin-only" style="margin-top:20px; width:100%">🔄 Resetar Sorteio Atual</button>
             </div>
         </div>
 
         <div>
-            <div class="box admin-only">
-                <h2>🎫 2. Adicionar / Customizar Cartela</h2>
+            <div class="box admin-only" id="box-cadastro">
+                <h2>🎫 Cadastrar Nova Cartela</h2>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label>Número/ID da Cartela:</label>
-                        <input type="number" id="cartelaId" placeholder="Ex: 101">
-                    </div>
-                    <div class="form-group">
-                        <label>Nome do Dono (Opcional):</label>
-                        <input type="text" id="cartelaDono" placeholder="Ex: João Silva">
-                    </div>
+                    <div class="form-group"><label>Nº da Cartela:</label><input type="number" id="cartelaId" placeholder="Ex: 1"></div>
+                    <div class="form-group"><label>Nome do Dono:</label><input type="text" id="cartelaDono" placeholder="Nome do Participante"></div>
                 </div>
-                <button class="btn-warn" id="btnGerarAleatorio" style="margin-bottom: 15px; width: 100%;">🎲 Preencher com 20 Números Aleatórios</button>
+                <button id="btnGerarAleatorio" class="btn-warn" style="width:100%; margin-bottom: 15px;">🎲 Gerar 20 Números Aleatórios</button>
                 <div class="grid-cartela" id="camposCartela"></div>
-                <button class="btn-success" style="width: 100%; padding: 14px;" id="btnSalvarCartela">💾 Guardar Cartela no Firestore</button>
+                <button id="btnSalvarCartela" class="btn-success" style="width:100%; padding: 14px;">💾 Gravar no Firestore</button>
             </div>
 
-            <div class="box cartelas" id="secao-impressao">
-                <h2>📋 Cartelas Cadastradas</h2>
-                <div class="form-row no-print" style="margin-bottom: 15px;">
-                    <button style="flex: 1;" class="btn-warn" id="btnImprimirNativo">🖨️ Imprimir via Navegador</button>
-                    <button style="flex: 1;" id="btnExportarPDF">📄 Salvar em PDF (Download)</button>
+            <div class="box">
+                <h2>🏆 Próximos a Ganhar (Top 5)</h2>
+                <div id="rankingPublico">Carregando classificação em tempo real...</div>
+            </div>
+
+            <div class="box cartelas">
+                <h2>📋 Conferência de Cartelas</h2>
+                <select id="selectCartelas" class="no-print"><option>Carregando...</option></select>
+                <div id="acoesCartelaSelecionada" style="display:none; margin-top:15px; gap: 10px;">
+                    <button onclick="window.print()" class="btn-warn" style="flex: 1;">🖨️ Imprimir</button>
+                    <button id="btnExcluirSelecionada" class="btn-danger admin-only">Excluir</button>
                 </div>
-                <div id="listaCartelas"></div>
+                <div id="visualizacaoCartela"></div>
             </div>
         </div>
     </div>
 
-    <footer>
-        <p>Criador @digodot - Leão do Norte</p>
-    </footer>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
         const firebaseConfig = {
-            apiKey: "AizaSyCBpNtUyPAIHdouNsjTuNhgMHtGn9HUSbE",
-            authDomain: "bingo-15ba4.firebaseapp.com",
-            projectId: "bingo-15ba4",
-            storageBucket: "bingo-15ba4.firebasestorage.app",
-            messagingSenderId: "792584488773",
-            appId: "1:792584488773:web:a0537fd5d607519288a02c"
-        };
+  apiKey: "AIzaSyCBpNTuYpAIHdouNsjTuNhgMHtGn9HUSbE",
+  authDomain: "bingo-15ba4.firebaseapp.com",
+  projectId: "bingo-15ba4",
+  storageBucket: "bingo-15ba4.firebasestorage.app",
+  messagingSenderId: "792584488773",
+  appId: "1:792584488773:web:a0537fd5d607519288a02c"
+};
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getFirestore(app);
+        const auth = getAuth(app);
 
+        let bolasSorteadas = [];
         let cartelas = [];
-        let bolasSorteadas = new Set();
         let maxBolasGlobal = 75;
         let isAdminLogado = false;
 
-        const modalLogin = document.getElementById('modalLogin');
         const camposCartela = document.getElementById('camposCartela');
-        const painelBolas = document.getElementById('painelBolas');
-        const listaCartelas = document.getElementById('listaCartelas');
-        const alertaGanhador = document.getElementById('alertaGanhador');
+        const selectCartelas = document.getElementById('selectCartelas');
+        const visualizacaoCartela = document.getElementById('visualizacaoCartela');
+        const modal = document.getElementById('modalLogin');
 
-        document.getElementById('bingoData').valueAsDate = new Date();
-
-        // ---------------- MODAL E AUTH CONTROLLER ----------------
-        document.getElementById('btnAbrirLogin').addEventListener('click', () => modalLogin.classList.add('ativo'));
-        document.getElementById('btnFecharLogin').addEventListener('click', () => modalLogin.classList.remove('ativo'));
-
-        document.getElementById('btnEntrar').addEventListener('click', () => {
-            const email = document.getElementById('loginEmail').value;
-            const senha = document.getElementById('loginSenha').value;
-            const erroEl = document.getElementById('erroLogin');
-            erroEl.style.display = 'none';
-
-            signInWithEmailAndPassword(auth, email, senha)
-                .then(() => modalLogin.classList.remove('ativo'))
-                .catch((error) => {
-                    console.error("Erro completo:", error);
-                    erroEl.innerText = "Credenciais incorretas ou método desativado!";
-                    erroEl.style.display = 'block';
-                });
-        });
-
-        document.getElementById('btnDeslogar').addEventListener('click', () => signOut(auth));
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                isAdminLogado = true;
-                document.body.classList.add('is-admin');
-                document.getElementById('btnAbrirLogin').style.display = 'none';
-                document.getElementById('btnDeslogar').style.display = 'inline-flex';
-                document.getElementById('txtInstrucaoBola').innerText = "Modo Admin: Clique nas bolas para marcar ou desmarcar o sorteio.";
-            } else {
-                isAdminLogado = false;
-                document.body.classList.remove('is-admin');
-                document.getElementById('btnDeslogar').style.display = 'none';
-                document.getElementById('btnAbrirLogin').style.display = 'inline-flex';
-                document.getElementById('txtInstrucaoBola').innerText = "Aguardando o administrador sortear as bolas...";
-            }
-            renderizarPainelBolas();
-            verificarGanhadores();
-        });
-
-        // ---------------- SINCRONIZAÇÃO FIRESTORE (REALTIME) ----------------
-        initInputs();
-
-        onSnapshot(doc(db, "configuracao", "atual"), (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                maxBolasGlobal = parseInt(data.maxBolas) || 75;
-                document.getElementById('infoPremio').innerText = data.premio || "Notebook Gamer";
-                document.getElementById('infoMaxBolas').innerText = maxBolasGlobal;
-                document.getElementById('infoData').innerText = data.dataStr || "--/--/----";
-                document.getElementById('bingoMaxBolas').value = maxBolasGlobal;
-                document.getElementById('bingoPremio').value = data.premio || "Notebook Gamer";
-            }
-            renderizarPainelBolas();
-            verificarGanhadores();
-        });
-
-        onSnapshot(doc(db, "sorteio", "bolas"), (sorteioSnap) => {
-            bolasSorteadas.clear();
-            if (sorteioSnap.exists() && sorteioSnap.data().lista) {
-                sorteioSnap.data().lista.forEach(n => bolasSorteadas.add(n));
-            }
-            renderizarPainelBolas();
-            verificarGanhadores();
-        });
-
-        onSnapshot(collection(db, "cartelas"), (snapshot) => {
-            cartelas = [];
-            snapshot.forEach((doc) => {
-                let cartelaData = doc.data();
-                cartelaData.firestoreId = doc.id;
-                cartelas.push(cartelaData);
-            });
-            verificarGanhadores();
-        });
-
-        // ---------------- FUNÇÕES INTERNAS ----------------
-        function initInputs() {
-            camposCartela.innerHTML = '';
-            for (let i = 0; i < 20; i++) {
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.min = 1;
-                input.max = 90;
-                input.className = 'input-num';
-                camposCartela.appendChild(input);
-            }
+        // Estruturar inputs invisíveis do admin
+        for (let i = 0; i < 20; i++) {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.className = 'input-num';
+            camposCartela.appendChild(input);
         }
 
+        // Eventos do Modal de Login no Topo
+        document.getElementById('btn-abrir-login').onclick = () => modal.style.display = 'flex';
+        document.getElementById('fecharModal').onclick = () => modal.style.display = 'none';
+        window.onclick = (e) => { if (e.target == modal) modal.style.display = 'none'; };
+
+        // Monitor de Estado Admin (Esconder/Mostrar Ferramentas de Edição)
+        onAuthStateChanged(auth, (user) => {
+            const itensAdmin = document.querySelectorAll('.admin-only');
+            if (user) {
+                isAdminLogado = true;
+                modal.style.display = 'none';
+                document.getElementById('btn-abrir-login').style.display = 'none';
+                document.getElementById('btn-sair').style.display = 'inline-flex';
+                itensAdmin.forEach(el => el.style.display = 'block');
+                // Ajustes específicos inline para botões que herdam flex/grid
+                document.getElementById('btnLimparSorteio').style.display = 'block';
+                if(document.getElementById('btnExcluirSelecionada')) document.getElementById('btnExcluirSelecionada').style.display = 'inline-flex';
+            } else {
+                isAdminLogado = false;
+                document.getElementById('btn-abrir-login').style.display = 'inline-flex';
+                document.getElementById('btn-sair').style.display = 'none';
+                itensAdmin.forEach(el => el.style.display = 'none');
+            }
+            renderizarPainelBolas();
+            atualizarRankingPublico();
+        });
+
+        // Trigger de Login
+        document.getElementById('btn-entrar').addEventListener('click', () => {
+            const email = document.getElementById('login-email').value.trim();
+            const senha = document.getElementById('login-senha').value;
+            const erroTxt = document.getElementById('erro-login');
+            erroTxt.style.display = 'none';
+
+            signInWithEmailAndPassword(auth, email, senha).catch(() => {
+                erroTxt.style.display = 'block';
+            });
+        });
+
+        document.getElementById('btn-sair').addEventListener('click', () => signOut(auth));
+
+        // Ouvintes globais e públicos do Firestore (Funcionam para todo mundo sem logar!)
+        onSnapshot(doc(db, "sorteio", "bolas"), (snap) => {
+            bolasSorteadas = [];
+            if (snap.exists() && snap.data().lista) {
+                bolasSorteadas = snap.data().lista.map(Number);
+            }
+            renderizarPainelBolas();
+            atualizarRankingPublico();
+            atualizarVisualizacaoCartela();
+        });
+
+        onSnapshot(collection(db, "cartelas"), (snap) => {
+            cartelas = [];
+            snap.forEach(d => cartelas.push({ ...d.data(), firestoreId: d.id }));
+            cartelas.sort((a, b) => Number(a.id) - Number(b.id));
+            
+            selectCartelas.innerHTML = '<option value="">Selecione uma cartela...</option>';
+            cartelas.forEach(c => {
+                selectCartelas.innerHTML += `<option value="${c.firestoreId}">Cartela Nº ${c.id} (${c.dono})</option>`;
+            });
+            atualizarRankingPublico();
+            atualizarVisualizacaoCartela();
+        });
+        
+        onSnapshot(doc(db, "configuracao", "atual"), (snap) => {
+            if (snap.exists()) {
+                maxBolasGlobal = parseInt(snap.data().maxBolas) || 75;
+                document.getElementById('bingoMaxBolas').value = maxBolasGlobal;
+                document.getElementById('bingoData').value = snap.data().dataRaw || "";
+                renderizarPainelBolas();
+            }
+        });
+
         function renderizarPainelBolas() {
-            painelBolas.innerHTML = '';
+            const painel = document.getElementById('painelBolas');
+            const boxUltima = document.getElementById('ultimaBolaBox');
+            painel.innerHTML = '';
+            
+            const setBolas = new Set(bolasSorteadas);
+            const ultimaBola = bolasSorteadas[bolasSorteadas.length - 1];
+
+            if(ultimaBola) {
+                boxUltima.innerHTML = `🔥 ÚLTIMA BOLA CHAMADA: <span style="font-size:1.6rem; color:#d97706;">${ultimaBola.toString().padStart(2, '0')}</span>`;
+            } else {
+                boxUltima.innerHTML = "Aguardando início do sorteio...";
+            }
+
             for (let i = 1; i <= maxBolasGlobal; i++) {
                 const bola = document.createElement('div');
                 bola.className = 'bola';
-                if(bolasSorteadas.has(i)) bola.classList.add('sorteada');
+                
+                if (setBolas.has(i)) {
+                    bola.classList.add('sorteada');
+                    if (i === ultimaBola) {
+                        bola.classList.remove('sorteada');
+                        bola.classList.add('ultima-sorteada');
+                    }
+                }
+                
                 bola.innerText = i.toString().padStart(2, '0');
                 
+                // Só permite clicar se for o administrador autenticado
                 bola.onclick = () => {
                     if (!isAdminLogado) return;
-                    if (bolasSorteadas.has(i)) bolasSorteadas.delete(i);
-                    else bolasSorteadas.add(i);
-                    setDoc(doc(db, "sorteio", "bolas"), { lista: Array.from(bolasSorteadas) });
+                    let novaLista = [...bolasSorteadas];
+                    if (setBolas.has(i)) {
+                        novaLista = novaLista.filter(n => n !== i);
+                    } else {
+                        novaLista.push(i);
+                    }
+                    setDoc(doc(db, "sorteio", "bolas"), { lista: novaLista });
                 };
-                painelBolas.appendChild(bola);
+                painel.appendChild(bola);
             }
         }
 
-        function verificarGanhadores() {
-            listaCartelas.innerHTML = '';
-            let temGanhadorGlobal = false;
-            let nomesGanhadores = [];
-
+        function atualizarRankingPublico() {
+            const rankingDiv = document.getElementById('rankingPublico');
             if (cartelas.length === 0) {
-                listaCartelas.innerHTML = '<p style="color: #64748b;" class="no-print">Nenhuma cartela ativa no momento.</p>';
-                alertaGanhador.style.display = 'none';
+                rankingDiv.innerHTML = "Nenhuma cartela cadastrada no sistema ainda.";
                 return;
             }
 
-            cartelas.sort((a, b) => a.id - b.id);
-
-            cartelas.forEach((cartela) => {
-                let acertos = 0;
-                cartela.numeros.forEach(num => {
-                    if(bolasSorteadas.has(num)) acertos++;
-                });
-
-                const ganhou = (acertos === 20);
-                if(ganhou) {
-                    temGanhadorGlobal = true;
-                    nomesGanhadores.push(`Nº ${cartela.id} (${cartela.dono})`);
-                }
-
-                const divCartela = document.createElement('div');
-                divCartela.className = `cartela-lista ${ganhou ? 'ganhadora' : ''}`;
-                const numerosJSON = JSON.stringify(cartela.numeros);
-
-                let html = `
-                    <div class="cartela-header">
-                        <span class="cartela-title"><strong>Cartela Nº ${cartela.id}</strong> - <small>Dono: ${cartela.dono}</small></span>
-                        <div class="no-print">
-                            <span style="font-size:0.85rem; margin-right:10px; color:#64748b;">(${acertos}/20 acertos)</span>
-                            <button onclick="window.editarCartela('${cartela.firestoreId}', '${cartela.id}', '${cartela.dono}', '${numerosJSON}')" style="padding:4px 8px; font-size:12px;" class="btn-warn admin-only-inline">Editar</button>
-                            <button onclick="window.deletarCartela('${cartela.firestoreId}')" style="padding:4px 8px; font-size:12px;" class="btn-danger admin-only-inline">Excluir</button>
-                        </div>
-                    </div>
-                    <div class="cartela-impressao">
-                `;
-                
-                cartela.numeros.forEach(num => {
-                    const marcado = bolasSorteadas.has(num) ? 'marcado' : '';
-                    html += `<div class="num-impresso ${marcado}">${num.toString().padStart(2, '0')}</div>`;
-                });
-
-                html += `</div>`;
-                divCartela.innerHTML = html;
-                listaCartelas.appendChild(divCartela);
+            const setBolas = new Set(bolasSorteadas);
+            let dadosRanking = cartelas.map(c => {
+                const acertos = c.numeros.filter(n => setBolas.has(n)).length;
+                return { ...c, acertos };
             });
 
-            if(temGanhadorGlobal) {
-                alertaGanhador.innerHTML = `🎉 BINGO! Vencedor(es): ${nomesGanhadores.join(', ')}! 🏆`;
-                alertaGanhador.style.display = 'block';
-            } else {
-                alertaGanhador.style.display = 'none';
-            }
+            // Ordena por maior número de acertos
+            dadosRanking.sort((a, b) => b.acertos - a.acertos);
+
+            rankingDiv.innerHTML = '';
+            // Pega as 5 melhores cartelas da rodada
+            dadosRanking.slice(0, 5).forEach(c => {
+                const classeGanhando = c.acertos === 20 ? 'ganhando' : '';
+                const textoStatus = c.acertos === 20 ? '🏆 BINGO!' : `${c.acertos} / 20 acertos`;
+                rankingDiv.innerHTML += `
+                    <div class="ranking-item ${classeGanhando}">
+                        <span>Nº ${c.id} - ${c.dono}</span>
+                        <span style="color: var(--primary);">${textoStatus}</span>
+                    </div>
+                `;
+            });
         }
 
-        // ---------------- AÇÕES ADMIN ----------------
-        document.getElementById('btnSalvarConfig').addEventListener('click', () => {
-            const premio = document.getElementById('bingoPremio').value;
-            const dataStrRaw = document.getElementById('bingoData').value;
-            const maxBolas = document.getElementById('bingoMaxBolas').value;
-            
-            let dataFormatada = "--/--/----";
-            if(dataStrRaw) {
-                const parts = dataStrRaw.split('-');
-                dataFormatada = `${parts[2]}/${parts[1]}/${parts[0]}`;
-            }
-
-            setDoc(doc(db, "configuracao", "atual"), { premio: premio, dataStr: dataFormatada, maxBolas: maxBolas });
-        });
-
-        document.getElementById('btnLimparSorteio').addEventListener('click', () => {
-            bolasSorteadas.clear();
-            setDoc(doc(db, "sorteio", "bolas"), { lista: [] });
-        });
-
+        // Funções internas mantidas intactas
         document.getElementById('btnGerarAleatorio').addEventListener('click', () => {
             let numeros = new Set();
             while (numeros.size < 20) {
@@ -444,69 +359,83 @@
             const arrayNumeros = Array.from(numeros).sort((a, b) => a - b);
             const inputs = document.querySelectorAll('.input-num');
             inputs.forEach((input, index) => input.value = arrayNumeros[index]);
-
             if(!document.getElementById('cartelaId').value) {
                 document.getElementById('cartelaId').value = cartelas.length + 1;
             }
         });
 
         document.getElementById('btnSalvarCartela').addEventListener('click', () => {
-            const idInput = document.getElementById('cartelaId').value;
-            const donoInput = document.getElementById('cartelaDono').value.trim();
+            const id = document.getElementById('cartelaId').value;
+            const dono = document.getElementById('cartelaDono').value.trim();
             const inputs = document.querySelectorAll('.input-num');
+            const nums = Array.from(inputs).map(i => parseInt(i.value));
             
-            if(!idInput) return alert("Forneça o ID da cartela.");
+            if(!id || nums.includes(NaN)) return alert("Preencha o número identificador e as 20 dezenas.");
+            if(new Set(nums).size !== 20) return alert("Existem dezenas duplicadas na cartela.");
 
-            let numeros = [];
-            for (let input of inputs) {
-                let val = parseInt(input.value);
-                if (isNaN(val) || val < 1 || val > maxBolasGlobal) return alert("Número inválido.");
-                numeros.push(val);
-            }
-
-            if (new Set(numeros).size !== 20) return alert("Não são permitidos números duplicados.");
-            numeros.sort((a, b) => a - b);
-
-            addDoc(collection(db, "cartelas"), { id: idInput, dono: donoInput || "Sem nome", numeros: numeros })
-                .then(() => {
-                    inputs.forEach(input => input.value = '');
-                    document.getElementById('cartelaId').value = '';
-                    document.getElementById('cartelaDono').value = '';
-                });
+            addDoc(collection(db, "cartelas"), { id: Number(id), dono: dono || "Anônimo", numeros: nums.sort((a,b)=>a-b) })
+            .then(() => {
+                alert("Cartela registrada com sucesso!");
+                inputs.forEach(i => i.value = '');
+                document.getElementById('cartelaId').value = '';
+                document.getElementById('cartelaDono').value = '';
+            });
         });
 
-        window.editarCartela = function(firestoreId, id, dono, numerosJSON) {
-            const numeros = JSON.parse(numerosJSON);
-            document.getElementById('cartelaId').value = id;
-            document.getElementById('cartelaDono').value = dono === "Sem nome" ? "" : dono;
-            const inputs = document.querySelectorAll('.input-num');
-            inputs.forEach((input, i) => input.value = numeros[i]);
-            window.deletarCartela(firestoreId);
-        };
+        selectCartelas.addEventListener('change', atualizarVisualizacaoCartela);
 
-        window.deletarCartela = function(firestoreId) {
-            deleteDoc(doc(db, "cartelas", firestoreId));
-        };
+        function atualizarVisualizacaoCartela() {
+            const val = selectCartelas.value;
+            if(!val) {
+                document.getElementById('acoesCartelaSelecionada').style.display = 'none';
+                visualizacaoCartela.innerHTML = '';
+                return;
+            }
+            const c = cartelas.find(x => x.firestoreId === val);
+            if(!c) return;
 
-        // ---------------- IMPRESSÃO / EXPORTAÇÃO ----------------
-        document.getElementById('btnImprimirNativo').addEventListener('click', () => window.print());
-        document.getElementById('btnExportarPDF').addEventListener('click', () => {
-            const elemento = document.getElementById('secao-impressao');
-            const botnoPrint = elemento.querySelector('.no-print');
-            const h2Title = elemento.querySelector('h2');
-            botnoPrint.style.display = 'none';
-            if(h2Title) h2Title.style.display = 'none';
+            document.getElementById('acoesCartelaSelecionada').style.display = 'flex';
+            const setBolas = new Set(bolasSorteadas);
+            let acertos = c.numeros.filter(n => setBolas.has(n)).length;
 
-            html2pdf().set({
-                margin: 12,
-                filename: 'Cartelas_Bingo.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            }).from(elemento).save().then(() => {
-                botnoPrint.style.display = 'flex';
-                if(h2Title) h2Title.style.display = 'flex';
-            });
+            visualizacaoCartela.innerHTML = `
+                <div class="cartela-lista">
+                    <h3 style="margin-bottom:15px;">Cartela Nº ${c.id} — <span style="font-weight:normal;">Dono: ${c.dono}</span> <span style="float:right; color:var(--primary)">(${acertos}/20 acertos)</span></h3>
+                    <div class="cartela-impressao">
+                        ${c.numeros.map(n => `<div class="num-impresso ${setBolas.has(n) ? 'marcado' : ''}">${n.toString().padStart(2, '0')}</div>`).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('btnSalvarConfig').addEventListener('click', () => {
+            const maxBolas = document.getElementById('bingoMaxBolas').value;
+            const dataRaw = document.getElementById('bingoData').value;
+            setDoc(doc(db, "configuracao", "atual"), { maxBolas: Number(maxBolas), dataRaw: dataRaw }, { merge: true })
+                .then(() => alert("Configurações atualizadas!"));
+        });
+
+        document.getElementById('btnIniciarJogo').addEventListener('click', () => {
+            if(confirm("Deseja mesmo resetar e iniciar uma nova rodada do zero?")) {
+                setDoc(doc(db, "sorteio", "bolas"), { lista: [] });
+            }
+        });
+
+        document.getElementById('btnLimparSorteio').addEventListener('click', () => {
+            if(confirm("Deseja limpar as dezenas sorteadas atuais?")) {
+                setDoc(doc(db, "sorteio", "bolas"), { lista: [] });
+            }
+        });
+
+        document.getElementById('btnExcluirSelecionada').addEventListener('click', () => {
+            const id = selectCartelas.value;
+            if(!id) return;
+            if(confirm("Apagar esta cartela do banco de dados definitivamente?")) {
+                deleteDoc(doc(db, "cartelas", id)).then(() => {
+                    selectCartelas.value = "";
+                    atualizarVisualizacaoCartela();
+                });
+            }
         });
     </script>
 </body>
