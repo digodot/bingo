@@ -239,7 +239,6 @@
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-        // CONFIGURAÇÃO CORRIGIDA PERMANENTEMENTE COM 'NTuYp'
         const firebaseConfig = {
             apiKey: "AIzaSyCBpNTuYpAIHdouNsjTuNhgMHtGn9HUSbE",
             authDomain: "bingo-15ba4.firebaseapp.com",
@@ -308,54 +307,73 @@
 
         document.getElementById('btn-sair').addEventListener('click', () => signOut(auth));
 
+        // 1º SNAPSHOT: Lê a configuração global
         onSnapshot(doc(db, "configuracao", "atual"), (snap) => {
             if (snap.exists()) {
                 sorteioAtivoId = snap.data().sorteioAtivoId || "padrao";
             }
+            // Força a atualização em cadeia com os dados atuais salvos em cache local
             sincronizarDadosSorteioAtivo();
             renderizarTabelasSorteios();
             atualizarFiltroCartelasSelect();
         });
 
+        // 2º SNAPSHOT: Monitora todos os sorteios criados
         onSnapshot(collection(db, "sorteos"), (snap) => {
-            listaSorteiosGlobal = [];
-            snap.forEach(d => listaSorteiosGlobal.push({ id: d.id, ...d.data() }));
+            let listaTemporaria = [];
+            snap.forEach(d => listaTemporaria.push({ id: d.id, ...d.data() }));
             
-            // Atualiza select de criação de cartelas
-            selectSorteioVinculo.innerHTML = '<option value="">Selecione um sorteio...</option>';
-            listaSorteiosGlobal.forEach(s => {
-                selectSorteioVinculo.innerHTML += `<option value="${s.id}">${s.titulo} (${s.data})</option>`;
-            });
+            // Substitui a lista de uma vez para evitar arrays vazios no meio da execução
+            listaSorteiosGlobal = listaTemporaria;
+            
+            // Atualiza o select de vínculos do painel admin
+            if (selectSorteioVinculo) {
+                selectSorteioVinculo.innerHTML = '<option value="">Selecione um sorteio...</option>';
+                listaSorteiosGlobal.forEach(s => {
+                    selectSorteioVinculo.innerHTML += `<option value="${s.id}">${s.titulo} (${s.data})</option>`;
+                });
+            }
 
             renderizarTabelasSorteios();
             sincronizarDadosSorteioAtivo();
             atualizarFiltroCartelasSelect();
         });
 
+        // 3º SNAPSHOT: Monitora todas as cartelas registradas
         onSnapshot(collection(db, "cartelas"), (snap) => {
-            cartelas = [];
-            snap.forEach(d => cartelas.push({ ...d.data(), firestoreId: d.id }));
-            cartelas.sort((a, b) => Number(a.id) - Number(b.id));
+            let listaTemporariaCartelas = [];
+            snap.forEach(d => listaTemporariaCartelas.push({ ...d.data(), firestoreId: d.id }));
+            listaTemporariaCartelas.sort((a, b) => Number(a.id) - Number(b.id));
+            
+            cartelas = listaTemporariaCartelas;
             
             atualizarFiltroCartelasSelect();
             atualizarRankingPublico();
             atualizarVisualizacaoCartela();
         });
 
-        // Função auxiliar para filtrar cartelas da rodada ativa na conferência
         function atualizarFiltroCartelasSelect() {
+            if(!selectCartelas) return;
+            
+            const valorSelecionadoAntes = selectCartelas.value;
             selectCartelas.innerHTML = '<option value="">Selecione uma cartela da rodada...</option>';
-            // Filtra apenas as cartelas que pertencem ao sorteio atualmente ativo
+            
             const cartelasFiltradas = cartelas.filter(c => c.sorteioId === sorteioAtivoId);
             
             cartelasFiltradas.forEach(c => {
                 selectCartelas.innerHTML += `<option value="${c.firestoreId}">Cartela Nº ${c.id} (${c.dono})</option>`;
             });
+
+            // Mantém a seleção estável se ela ainda existir na lista nova
+            if(valorSelecionadoAntes) {
+                selectCartelas.value = valorSelecionadoAntes;
+            }
         }
 
         let unsubBolasAtual = null;
         function sincronizarDadosSorteioAtivo() {
             const atual = listaSorteiosGlobal.find(s => s.id === sorteioAtivoId);
+            
             if (!atual || sorteioAtivoId === "nenhum") {
                 document.getElementById('sorteioAtivoNome').innerText = "🚫 Nenhum Sorteio Ativo no Momento";
                 maxBolasGlobal = 75;
@@ -377,6 +395,7 @@
             }
 
             if(unsubBolasAtual) unsubBolasAtual();
+            
             unsubBolasAtual = onSnapshot(doc(db, "sorteio_bolas", sorteioAtivoId), (snapBolas) => {
                 if (snapBolas.exists() && snapBolas.data().lista) {
                     bolasSorteadas = snapBolas.data().lista.map(Number);
@@ -389,47 +408,56 @@
             });
         }
 
+        // Blindagem contra quebras de renderização nas tabelas do público
         function renderizarTabelasSorteios() {
             const tabelaAdmin = document.getElementById('tabelaAcoesSorteio');
             const tabelaSorteiosAgendados = document.getElementById('tabelaSorteiosAgendados');
             
-            tabelaAdmin.innerHTML = '';
-            tabelaSorteiosAgendados.innerHTML = '';
+            if(tabelaAdmin) tabelaAdmin.innerHTML = '';
+            if(tabelaSorteiosAgendados) tabelaSorteiosAgendados.innerHTML = '';
 
             if (listaSorteiosGlobal.length === 0) {
-                tabelaAdmin.innerHTML = '<tr><td colspan="3">Nenhum sorteio cadastrado.</td></tr>';
-                tabelaSorteiosAgendados.innerHTML = '<tr><td colspan="3">Nenhum sorteio programado.</td></tr>';
+                if(tabelaAdmin) tabelaAdmin.innerHTML = '<tr><td colspan="3">Nenhum sorteio cadastrado.</td></tr>';
+                if(tabelaSorteiosAgendados) tabelaSorteiosAgendados.innerHTML = '<tr><td colspan="3">Nenhum sorteio programado.</td></tr>';
                 return;
             }
 
             listaSorteiosGlobal.forEach(s => {
-                const isAtivo = s.id === sorteioAtivoId;
-                const statusBadge = isAtivo ? '<span class="badge ativo">Ativo</span>' : '<span class="badge agendado">Agendado</span>';
-                
-                tabelaSorteiosAgendados.innerHTML += `
-                    <tr>
-                        <td><strong>${s.titulo}</strong></td>
-                        <td>${s.data}</td>
-                        <td>${statusBadge}</td>
-                    </tr>
-                `;
+                try {
+                    const isAtivo = s.id === sorteioAtivoId;
+                    const statusBadge = isAtivo ? '<span class="badge ativo">Ativo</span>' : '<span class="badge agendado">Agendado</span>';
+                    
+                    if(tabelaSorteiosAgendados) {
+                        tabelaSorteiosAgendados.innerHTML += `
+                            <tr>
+                                <td><strong>${s.titulo}</strong></td>
+                                <td>${s.data}</td>
+                                <td>${statusBadge}</td>
+                            </tr>
+                        `;
+                    }
 
-                const btnAcao = isAtivo 
-                    ? `<button onclick="desativarSorteioAtual()" class="btn-danger btn-sm">⏸️ Desativar</button>`
-                    : `<button onclick="definirSorteioAtivo('${s.id}')" class="btn-warn btn-sm">🎯 Ativar</button>`;
-                
-                tabelaAdmin.innerHTML += `
-                    <tr>
-                        <td><strong>${s.titulo}</strong><br><span style="font-size:0.8rem; color:#64748b;">${s.data}</span></td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <div style="display:flex; gap:5px;">
-                                ${btnAcao}
-                                <button onclick="deletarSorteio('${s.id}')" class="btn-danger btn-sm">❌</button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                    if(tabelaAdmin) {
+                        const btnAcao = isAtivo 
+                            ? `<button onclick="desativarSorteioAtual()" class="btn-danger btn-sm">⏸️ Desativar</button>`
+                            : `<button onclick="definirSorteioAtivo('${s.id}')" class="btn-warn btn-sm">🎯 Ativar</button>`;
+                        
+                        tabelaAdmin.innerHTML += `
+                            <tr>
+                                <td><strong>${s.titulo}</strong><br><span style="font-size:0.8rem; color:#64748b;">${s.data}</span></td>
+                                <td>${statusBadge}</td>
+                                <td>
+                                    <div style="display:flex; gap:5px;">
+                                        ${btnAcao}
+                                        <button onclick="deletarSorteio('${s.id}')" class="btn-danger btn-sm">❌</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        `;
+                    }
+                } catch (e) {
+                    console.error("Erro ao processar linha de sorteio:", e);
+                }
             });
         }
 
@@ -463,12 +491,12 @@
             }
         });
 
-        // --- EXPOSIÇÃO DAS FUNÇÕES PARA O ESCOPO GLOBAL (WINDOW) ---
         window.definirSorteioAtivo = function(id) {
             setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: id }, { merge: true })
                 .then(() => {
                     sincronizarDadosSorteioAtivo();
                     renderizarTabelasSorteios();
+                    atualizarFiltroCartelasSelect();
                 });
         };
 
@@ -477,6 +505,7 @@
                 .then(() => {
                     sincronizarDadosSorteioAtivo();
                     renderizarTabelasSorteios();
+                    atualizarFiltroCartelasSelect();
                 });
         };
 
@@ -486,7 +515,7 @@
                     if(id === sorteioAtivoId) {
                         await setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: "nenhum" }, { merge: true });
                     }
-                    await deleteDoc(doc(db, "sorteos", id));
+                    await deleteDoc(doc(doc(db, "sorteos", id)));
                     await deleteDoc(doc(db, "sorteio_bolas", id));
                     alert("Sorteio removido com sucesso!");
                 } catch (err) {
@@ -498,8 +527,9 @@
         function renderizarPainelBolas() {
             const painel = document.getElementById('painelBolas');
             const boxUltima = document.getElementById('ultimaBolaBox');
-            painel.innerHTML = '';
+            if(!painel) return;
             
+            painel.innerHTML = '';
             const setBolas = new Set(bolasSorteadas);
             const ultimaBola = bolasSorteadas[bolasSorteadas.length - 1];
 
@@ -539,8 +569,8 @@
 
         function atualizarRankingPublico() {
             const rankingDiv = document.getElementById('rankingPublico');
+            if(!rankingDiv) return;
             
-            // Filtra as cartelas para pontuar apenas aquelas do sorteio ativo
             const cartelasDoSorteioAtivo = cartelas.filter(c => c.sorteioId === sorteioAtivoId);
 
             if (cartelasDoSorteioAtivo.length === 0) {
@@ -597,7 +627,7 @@
                 id: Number(id), 
                 dono: dono || "Anônimo", 
                 numeros: nums.sort((a,b)=>a-b),
-                sorteioId: sorteioIdVinculado // Vinculação inserida aqui
+                sorteioId: sorteioIdVinculado
             })
             .then(() => {
                 alert("Cartela vinculada e registrada com sucesso!");
@@ -613,14 +643,17 @@
         function atualizarVisualizacaoCartela() {
             const val = selectCartelas.value;
             if(!val) {
-                document.getElementById('acoesCartelaSelecionada').style.display = 'none';
+                const acoes = document.getElementById('acoesCartelaSelecionada');
+                if(acoes) acoes.style.display = 'none';
                 visualizacaoCartela.innerHTML = '';
                 return;
             }
             const c = cartelas.find(x => x.firestoreId === val);
             if(!c) return;
 
-            document.getElementById('acoesCartelaSelecionada').style.display = 'flex';
+            const acoes = document.getElementById('acoesCartelaSelecionada');
+            if(acoes) acoes.style.display = 'flex';
+            
             const setBolas = new Set(bolasSorteadas);
             let acertos = c.numeros.filter(n => setBolas.has(n)).length;
 
