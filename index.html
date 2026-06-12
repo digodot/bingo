@@ -190,13 +190,19 @@
                     <div class="form-group"><label>Nº da Cartela:</label><input type="number" id="cartelaId" placeholder="Ex: 1"></div>
                     <div class="form-group"><label>Nome do Dono:</label><input type="text" id="cartelaDono" placeholder="Nome do Participante"></div>
                 </div>
+                <div class="form-group">
+                    <label>Vincular a qual Sorteio?</label>
+                    <select id="selectSorteioVinculo">
+                        <option value="">Carregando sorteios disponíveis...</option>
+                    </select>
+                </div>
                 <button id="btnGerarAleatorio" class="btn-warn" style="width:100%; margin-bottom: 15px;">🎲 Gerar 20 Números Aleatórios</button>
                 <div class="grid-cartela" id="camposCartela"></div>
                 <button id="btnSalvarCartela" class="btn-success" style="width:100%; padding: 14px;">💾 Gravar no Firestore</button>
             </div>
 
             <div class="box">
-                <h2>🏆 Próximos a Ganhar (Top 5)</h2>
+                <h2>🏆 Próximos a Ganhar (Rodada Ativa)</h2>
                 <div id="rankingPublico">Carregando classificação em tempo real...</div>
             </div>
 
@@ -217,7 +223,7 @@
             </div>
 
             <div class="box cartelas">
-                <h2>📋 Conferência de Cartelas</h2>
+                <h2>📋 Conferência de Cartelas (Rodada Ativa)</h2>
                 <select id="selectCartelas" class="no-print"><option>Carregando...</option></select>
                 <div id="acoesCartelaSelecionada" style="display:none; margin-top:15px; gap: 10px;">
                     <button onclick="window.print()" class="btn-warn" style="flex: 1;">🖨️ Imprimir</button>
@@ -233,14 +239,15 @@
         import { getFirestore, collection, addDoc, onSnapshot, doc, deleteDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
         import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
 
-		const firebaseConfig = {
-  apiKey: "AIzaSyCBpNTuYpAIHdouNsjTuNhgMHtGn9HUSbE",
-  authDomain: "bingo-15ba4.firebaseapp.com",
-  projectId: "bingo-15ba4",
-  storageBucket: "bingo-15ba4.firebasestorage.app",
-  messagingSenderId: "792584488773",
-  appId: "1:792584488773:web:a0537fd5d607519288a02c"
-};
+        // CONFIGURAÇÃO CORRIGIDA PERMANENTEMENTE COM 'NTuYp'
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBpNTuYpAIHdouNsjTuNhgMHtGn9HUSbE",
+            authDomain: "bingo-15ba4.firebaseapp.com",
+            projectId: "bingo-15ba4",
+            storageBucket: "bingo-15ba4.firebasestorage.app",
+            messagingSenderId: "792584488773",
+            appId: "1:792584488773:web:a0537fd5d607519288a02c"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
@@ -256,6 +263,7 @@
         const camposCartela = document.getElementById('camposCartela');
         const selectCartelas = document.getElementById('selectCartelas');
         const visualizacaoCartela = document.getElementById('visualizacaoCartela');
+        const selectSorteioVinculo = document.getElementById('selectSorteioVinculo');
         const modal = document.getElementById('modalLogin');
 
         for (let i = 0; i < 20; i++) {
@@ -305,13 +313,23 @@
                 sorteioAtivoId = snap.data().sorteioAtivoId || "padrao";
             }
             sincronizarDadosSorteioAtivo();
+            renderizarTabelasSorteios();
+            atualizarFiltroCartelasSelect();
         });
 
         onSnapshot(collection(db, "sorteos"), (snap) => {
             listaSorteiosGlobal = [];
             snap.forEach(d => listaSorteiosGlobal.push({ id: d.id, ...d.data() }));
+            
+            // Atualiza select de criação de cartelas
+            selectSorteioVinculo.innerHTML = '<option value="">Selecione um sorteio...</option>';
+            listaSorteiosGlobal.forEach(s => {
+                selectSorteioVinculo.innerHTML += `<option value="${s.id}">${s.titulo} (${s.data})</option>`;
+            });
+
             renderizarTabelasSorteios();
             sincronizarDadosSorteioAtivo();
+            atualizarFiltroCartelasSelect();
         });
 
         onSnapshot(collection(db, "cartelas"), (snap) => {
@@ -319,13 +337,21 @@
             snap.forEach(d => cartelas.push({ ...d.data(), firestoreId: d.id }));
             cartelas.sort((a, b) => Number(a.id) - Number(b.id));
             
-            selectCartelas.innerHTML = '<option value="">Selecione uma cartela...</option>';
-            cartelas.forEach(c => {
-                selectCartelas.innerHTML += `<option value="${c.firestoreId}">Cartela Nº ${c.id} (${c.dono})</option>`;
-            });
+            atualizarFiltroCartelasSelect();
             atualizarRankingPublico();
             atualizarVisualizacaoCartela();
         });
+
+        // Função auxiliar para filtrar cartelas da rodada ativa na conferência
+        function atualizarFiltroCartelasSelect() {
+            selectCartelas.innerHTML = '<option value="">Selecione uma cartela da rodada...</option>';
+            // Filtra apenas as cartelas que pertencem ao sorteio atualmente ativo
+            const cartelasFiltradas = cartelas.filter(c => c.sorteioId === sorteioAtivoId);
+            
+            cartelasFiltradas.forEach(c => {
+                selectCartelas.innerHTML += `<option value="${c.firestoreId}">Cartela Nº ${c.id} (${c.dono})</option>`;
+            });
+        }
 
         let unsubBolasAtual = null;
         function sincronizarDadosSorteioAtivo() {
@@ -352,9 +378,10 @@
 
             if(unsubBolasAtual) unsubBolasAtual();
             unsubBolasAtual = onSnapshot(doc(db, "sorteio_bolas", sorteioAtivoId), (snapBolas) => {
-                bolasSorteadas = [];
                 if (snapBolas.exists() && snapBolas.data().lista) {
                     bolasSorteadas = snapBolas.data().lista.map(Number);
+                } else {
+                    bolasSorteadas = [];
                 }
                 renderizarPainelBolas();
                 atualizarRankingPublico();
@@ -406,7 +433,6 @@
             });
         }
 
-        // CORREÇÃO CRÍTICA AQUI: Execução síncrona encadeada para evitar concorrência do Firebase
         document.getElementById('btnSalvarSorteio').addEventListener('click', async () => {
             const titulo = document.getElementById('sorteioTitulo').value.trim();
             const data = document.getElementById('bingoData').value;
@@ -419,7 +445,6 @@
             if (listaPremios.length === 0) return alert("Cadastre pelo menos 1 prêmio para salvar o sorteio.");
 
             try {
-                // 1. Cria o sorteio primário primeiro
                 const docRef = await addDoc(collection(db, "sorteos"), {
                     titulo: titulo,
                     data: data,
@@ -427,12 +452,9 @@
                     premios: listaPremios
                 });
                 
-                // 2. Só depois cria o histórico com o ID gerado real
                 await setDoc(doc(db, "sorteio_bolas", docRef.id), { lista: [] });
-                
                 alert("Sorteio e prêmios gravados e agendados com sucesso!");
                 
-                // Limpa os campos após o sucesso
                 document.getElementById('sorteioTitulo').value = '';
                 document.getElementById('bingoData').value = '';
                 premioInputs.forEach(i => i.value = '');
@@ -444,23 +466,26 @@
         // --- EXPOSIÇÃO DAS FUNÇÕES PARA O ESCOPO GLOBAL (WINDOW) ---
         window.definirSorteioAtivo = function(id) {
             setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: id }, { merge: true })
-                .then(() => alert("Sorteio alternado com sucesso!"));
+                .then(() => {
+                    sincronizarDadosSorteioAtivo();
+                    renderizarTabelasSorteios();
+                });
         };
 
         window.desativarSorteioAtual = function() {
             setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: "nenhum" }, { merge: true })
-                .then(() => alert("Sorteio desativado! Sistema em modo de espera."));
+                .then(() => {
+                    sincronizarDadosSorteioAtivo();
+                    renderizarTabelasSorteios();
+                });
         };
 
         window.deletarSorteio = async function(id) {
             if(confirm("Deseja apagar esse agendamento e todo o seu histórico de dezenas?")) {
                 try {
-                    // Se for deletar o sorteio que está marcado ativo, desativa no painel geral primeiro
                     if(id === sorteioAtivoId) {
                         await setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: "nenhum" }, { merge: true });
                     }
-                    
-                    // Remove do banco de forma definitiva
                     await deleteDoc(doc(db, "sorteos", id));
                     await deleteDoc(doc(db, "sorteio_bolas", id));
                     alert("Sorteio removido com sucesso!");
@@ -514,13 +539,17 @@
 
         function atualizarRankingPublico() {
             const rankingDiv = document.getElementById('rankingPublico');
-            if (cartelas.length === 0) {
-                rankingDiv.innerHTML = "Nenhuma cartela cadastrada no sistema ainda.";
+            
+            // Filtra as cartelas para pontuar apenas aquelas do sorteio ativo
+            const cartelasDoSorteioAtivo = cartelas.filter(c => c.sorteioId === sorteioAtivoId);
+
+            if (cartelasDoSorteioAtivo.length === 0) {
+                rankingDiv.innerHTML = "Nenhuma cartela cadastrada para a rodada ativa.";
                 return;
             }
 
             const setBolas = new Set(bolasSorteadas);
-            let dadosRanking = cartelas.map(c => {
+            let dadosRanking = cartelasDoSorteioAtivo.map(c => {
                 const acertos = c.numeros.filter(n => setBolas.has(n)).length;
                 return { ...c, acertos };
             });
@@ -556,18 +585,26 @@
         document.getElementById('btnSalvarCartela').addEventListener('click', () => {
             const id = document.getElementById('cartelaId').value;
             const dono = document.getElementById('cartelaDono').value.trim();
+            const sorteioIdVinculado = selectSorteioVinculo.value;
             const inputs = document.querySelectorAll('.input-num');
             const nums = Array.from(inputs).map(i => parseInt(i.value));
             
             if(!id || nums.includes(NaN)) return alert("Preencha o número identificador e as 20 dezenas.");
+            if(!sorteioIdVinculado) return alert("Por favor, selecione a qual sorteio esta cartela pertence!");
             if(new Set(nums).size !== 20) return alert("Existem dezenas duplicadas na cartela.");
 
-            addDoc(collection(db, "cartelas"), { id: Number(id), dono: dono || "Anônimo", numeros: nums.sort((a,b)=>a-b) })
+            addDoc(collection(db, "cartelas"), { 
+                id: Number(id), 
+                dono: dono || "Anônimo", 
+                numeros: nums.sort((a,b)=>a-b),
+                sorteioId: sorteioIdVinculado // Vinculação inserida aqui
+            })
             .then(() => {
-                alert("Cartela registrada com sucesso!");
+                alert("Cartela vinculada e registrada com sucesso!");
                 inputs.forEach(i => i.value = '');
                 document.getElementById('cartelaId').value = '';
                 document.getElementById('cartelaDono').value = '';
+                selectSorteioVinculo.value = '';
             });
         });
 
