@@ -307,7 +307,7 @@
             sincronizarDadosSorteioAtivo();
         });
 
-        onSnapshot(collection(db, "sorteios"), (snap) => {
+        onSnapshot(collection(db, "sorteos"), (snap) => {
             listaSorteiosGlobal = [];
             snap.forEach(d => listaSorteiosGlobal.push({ id: d.id, ...d.data() }));
             renderizarTabelasSorteios();
@@ -379,7 +379,6 @@
                 const isAtivo = s.id === sorteioAtivoId;
                 const statusBadge = isAtivo ? '<span class="badge ativo">Ativo</span>' : '<span class="badge agendado">Agendado</span>';
                 
-                // Tabela pública remove os que não estão ativos
                 tabelaSorteiosAgendados.innerHTML += `
                     <tr>
                         <td><strong>${s.titulo}</strong></td>
@@ -388,7 +387,6 @@
                     </tr>
                 `;
 
-                // Botão dinâmico: Se está ativo, mostra opção de "Desativar" para liberar a exclusão
                 const btnAcao = isAtivo 
                     ? `<button onclick="desativarSorteioAtual()" class="btn-danger btn-sm">⏸️ Desativar</button>`
                     : `<button onclick="definirSorteioAtivo('${s.id}')" class="btn-warn btn-sm">🎯 Ativar</button>`;
@@ -408,7 +406,8 @@
             });
         }
 
-        document.getElementById('btnSalvarSorteio').addEventListener('click', () => {
+        // CORREÇÃO CRÍTICA AQUI: Execução síncrona encadeada para evitar concorrência do Firebase
+        document.getElementById('btnSalvarSorteio').addEventListener('click', async () => {
             const titulo = document.getElementById('sorteioTitulo').value.trim();
             const data = document.getElementById('bingoData').value;
             const maxBolas = document.getElementById('bingoMaxBolas').value;
@@ -419,19 +418,27 @@
             if (!titulo || !data) return alert("Por favor, preencha o título e a data do sorteio.");
             if (listaPremios.length === 0) return alert("Cadastre pelo menos 1 prêmio para salvar o sorteio.");
 
-            addDoc(collection(db, "sorteos"), {
-                titulo: titulo,
-                data: data,
-                maxBolas: Number(maxBolas),
-                premios: listaPremios
-            }).then((docRef) => {
-                setDoc(doc(db, "sorteio_bolas", docRef.id), { lista: [] });
-                alert("Sorteio e prêmios agendados com sucesso!");
+            try {
+                // 1. Cria o sorteio primário primeiro
+                const docRef = await addDoc(collection(db, "sorteos"), {
+                    titulo: titulo,
+                    data: data,
+                    maxBolas: Number(maxBolas),
+                    premios: listaPremios
+                });
                 
+                // 2. Só depois cria o histórico com o ID gerado real
+                await setDoc(doc(db, "sorteio_bolas", docRef.id), { lista: [] });
+                
+                alert("Sorteio e prêmios gravados e agendados com sucesso!");
+                
+                // Limpa os campos após o sucesso
                 document.getElementById('sorteioTitulo').value = '';
                 document.getElementById('bingoData').value = '';
                 premioInputs.forEach(i => i.value = '');
-            }).catch(err => alert("Erro ao criar sorteio: " + err.message));
+            } catch(err) {
+                alert("Erro ao criar sorteio no banco: " + err.message);
+            }
         });
 
         // --- EXPOSIÇÃO DAS FUNÇÕES PARA O ESCOPO GLOBAL (WINDOW) ---
@@ -440,23 +447,23 @@
                 .then(() => alert("Sorteio alternado com sucesso!"));
         };
 
-        // Função explícita para desativar qualquer sorteio da rodada
         window.desativarSorteioAtual = function() {
             setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: "nenhum" }, { merge: true })
                 .then(() => alert("Sorteio desativado! Sistema em modo de espera."));
         };
 
         window.deletarSorteio = async function(id) {
-            if(confirm("Deseja apagar esse agendamento e todo o seu histórico de bolas chamadas?")) {
+            if(confirm("Deseja apagar esse agendamento e todo o seu histórico de dezenas?")) {
                 try {
-                    // Se o sorteio deletado for o ativo, limpa a ativação primeiro antes de remover
+                    // Se for deletar o sorteio que está marcado ativo, desativa no painel geral primeiro
                     if(id === sorteioAtivoId) {
                         await setDoc(doc(db, "configuracao", "atual"), { sorteioAtivoId: "nenhum" }, { merge: true });
                     }
                     
+                    // Remove do banco de forma definitiva
                     await deleteDoc(doc(db, "sorteos", id));
                     await deleteDoc(doc(db, "sorteio_bolas", id));
-                    alert("Sorteio removido do banco com sucesso!");
+                    alert("Sorteio removido com sucesso!");
                 } catch (err) {
                     alert("Erro ao deletar: " + err.message);
                 }
